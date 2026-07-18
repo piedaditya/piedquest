@@ -5,7 +5,6 @@ import { ArrowUpRight, Clock, Flame, Share2, Sparkles, Trophy } from "lucide-rea
 import {
   dailyQuizQueryOptions,
   type DailyQuiz,
-  type Question,
 } from "@/lib/quiz-queries";
 import {
   getCurrentStreak,
