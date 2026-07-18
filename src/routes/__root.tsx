@@ -80,17 +80,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "DailyQuest — Test Your Fandom Every Single Day" },
       { name: "description", content: "One character. Six clues. A fresh 60-second pop-culture quiz every 24 hours. Build your streak. Share your score." },
       { name: "author", content: "DailyQuest" },
-      { property: "og:title", content: "DailyQuest — Test Your Fandom" },
-      { property: "og:description", content: "A fresh pop-culture quiz every single day. No signup. No spoilers." },
+      { property: "og:title", content: "DailyQuest — Test Your Fandom Every Single Day" },
+      { property: "og:description", content: "One character. Six clues. A fresh 60-second pop-culture quiz every 24 hours. Build your streak. Share your score." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "DailyQuest — Test Your Fandom Every Single Day" },
+      { name: "twitter:description", content: "One character. Six clues. A fresh 60-second pop-culture quiz every 24 hours. Build your streak. Share your score." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/903dd7c5-146e-49be-a5fd-ba7c72d42a8b" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/903dd7c5-146e-49be-a5fd-ba7c72d42a8b" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
