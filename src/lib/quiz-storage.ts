@@ -7,6 +7,9 @@ export interface QuizStorage {
   lastQuizNumber: number | null;
   streak: number;
   bestScore: number;
+  xp: number;
+  favoriteFandom: string | null;
+  practiceCount: number;
 }
 
 const defaultState: QuizStorage = {
@@ -16,6 +19,9 @@ const defaultState: QuizStorage = {
   lastQuizNumber: null,
   streak: 0,
   bestScore: 0,
+  xp: 0,
+  favoriteFandom: null,
+  practiceCount: 0,
 };
 
 export function getLocalDateString(d: Date = new Date()): string {
@@ -66,15 +72,69 @@ export function recordCompletion(params: {
   }
 
   const next: QuizStorage = {
+    ...prev,
     lastPlayedDate: today,
     lastScore: params.score,
     lastPattern: params.pattern,
     lastQuizNumber: params.quizNumber,
     streak,
     bestScore: Math.max(prev.bestScore, params.score),
+    xp: prev.xp + params.score * 10,
   };
   writeStorage(next);
   return next;
+}
+
+export function recordPractice(correctCount: number): QuizStorage {
+  const prev = readStorage();
+  const next: QuizStorage = {
+    ...prev,
+    xp: prev.xp + correctCount * 10,
+    practiceCount: prev.practiceCount + 1,
+  };
+  writeStorage(next);
+  return next;
+}
+
+export function setFavoriteFandom(fandom: string | null): QuizStorage {
+  const prev = readStorage();
+  const next: QuizStorage = { ...prev, favoriteFandom: fandom };
+  writeStorage(next);
+  return next;
+}
+
+const LEVEL_XP = 100;
+
+export interface LevelInfo {
+  level: number;
+  title: string;
+  currentXp: number; // xp within current level
+  neededXp: number; // xp needed to next level
+  progress: number; // 0..1
+  totalXp: number;
+}
+
+export function getLevelInfo(xp: number): LevelInfo {
+  const level = Math.floor(xp / LEVEL_XP) + 1;
+  const currentXp = xp % LEVEL_XP;
+  const title =
+    level >= 20
+      ? "Trivia Legend"
+      : level >= 11
+        ? "Lore Master"
+        : level >= 6
+          ? "Fandom Expert"
+          : level >= 3
+            ? "Fandom Rookie"
+            : "Trivia Novice";
+  return {
+    level,
+    title,
+    currentXp,
+    neededXp: LEVEL_XP,
+    progress: currentXp / LEVEL_XP,
+    totalXp: xp,
+  };
 }
 
 export function hasPlayedToday(state: QuizStorage): boolean {
