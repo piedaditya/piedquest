@@ -51,3 +51,45 @@ export const dailyQuizQueryOptions = queryOptions({
   queryFn: fetchTodaysQuiz,
   staleTime: 5 * 60_000,
 });
+
+export const FANDOM_CATEGORIES = [
+  "All Fandoms",
+  "Anime",
+  "Gaming",
+  "Pop Culture",
+  "Movies",
+  "TV",
+  "Music",
+] as const;
+
+async function fetchPracticePool(category: string | null): Promise<Question[]> {
+  let query = supabase
+    .from("daily_questions")
+    .select("id, quiz_date, quiz_number, question_order, question, choices, correct_index, category")
+    .limit(200);
+
+  if (category && category !== "All Fandoms") {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  if (!data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    quizNumber: row.quiz_number,
+    order: row.question_order,
+    question: row.question,
+    choices: row.choices as string[],
+    correctIndex: row.correct_index,
+    category: row.category,
+  }));
+}
+
+export const practicePoolQueryOptions = (category: string | null) =>
+  queryOptions({
+    queryKey: ["practice-pool", category ?? "all"],
+    queryFn: () => fetchPracticePool(category),
+    staleTime: 10 * 60_000,
+  });
