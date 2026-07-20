@@ -205,7 +205,7 @@ function PracticePlay({
         <div className="flex items-center justify-between">
           <Logo />
           <span className="font-display text-xs uppercase tracking-widest text-accent">
-            Practice · {index + 1}/{total}
+            Practice · Clue {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
           </span>
         </div>
 
