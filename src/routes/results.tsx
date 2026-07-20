@@ -12,6 +12,7 @@ import {
   readStorage,
   type QuizStorage,
 } from "@/lib/quiz-storage";
+import { upsertLeaderboardEntry } from "@/lib/leaderboard";
 import {
   BgGlow,
   FullBleed,
@@ -54,6 +55,16 @@ function ResultsContainer() {
 
   useEffect(() => {
     setStorage(readStorage());
+  }, []);
+
+  useEffect(() => {
+    const s = readStorage();
+    if (s.lastScore == null) return;
+    void upsertLeaderboardEntry({
+      streak: getCurrentStreak(s),
+      xp: s.xp,
+      score: s.lastScore,
+    });
   }, []);
 
   if (!data) {
