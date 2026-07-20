@@ -398,20 +398,6 @@ function LeaderboardTeaser() {
   );
 }
 
-function LoopCard({
-  n,
-  title,
-  icon,
-  children,
-}: {
-  n: string;
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return null as unknown as JSX.Element;
-}
-
 function MysteryArtwork({
   category,
   seed,
@@ -462,7 +448,7 @@ function MysteryArtwork({
   );
 }
 
-function _LoopCardImpl({
+function LoopCard({
   n,
   title,
   icon,
