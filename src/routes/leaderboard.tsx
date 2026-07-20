@@ -1,49 +1,76 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Crown, Flame, Home, Trophy, Zap } from "lucide-react";
+import { Crown, Flame, Home, Loader2, Pencil, Trophy, Zap } from "lucide-react";
 import { BgGlow, Logo } from "@/lib/quest-ui";
 import { getLevelInfo, readStorage, type QuizStorage } from "@/lib/quiz-storage";
+import {
+  fetchTopByStreak,
+  fetchTopLeaderboard,
+  getClientId,
+  getUsername,
+  setUsername,
+  type LeaderboardRow,
+} from "@/lib/leaderboard";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/leaderboard")({
   component: LeaderboardRoute,
 });
 
-type Player = {
-  handle: string;
-  avatar: string;
-  streak: number;
-  xp: number;
-  fandom: string;
-};
-
-const WEEKLY_LEADERS: Player[] = [
-  { handle: "@kaijusenpai", avatar: "🐉", streak: 148, xp: 12480, fandom: "Anime" },
-  { handle: "@lore_master", avatar: "📜", streak: 121, xp: 10980, fandom: "Movies" },
-  { handle: "@pixel_witch", avatar: "🎮", streak: 97, xp: 9430, fandom: "Gaming" },
-  { handle: "@midnight_owl", avatar: "🦉", streak: 88, xp: 8720, fandom: "TV" },
-  { handle: "@vinyl_hero", avatar: "🎧", streak: 74, xp: 7610, fandom: "Music" },
-  { handle: "@stan_supreme", avatar: "⭐", streak: 66, xp: 6900, fandom: "Pop Culture" },
-  { handle: "@quest_ronin", avatar: "🥷", streak: 52, xp: 5480, fandom: "Anime" },
-  { handle: "@raid_captain", avatar: "🛡️", streak: 47, xp: 4990, fandom: "Gaming" },
-  { handle: "@fandom_fox", avatar: "🦊", streak: 41, xp: 4210, fandom: "TV" },
-  { handle: "@popcorn_ghost", avatar: "🍿", streak: 33, xp: 3560, fandom: "Movies" },
-];
-
-const RISING_ROOKIES: Player[] = [
-  { handle: "@newbie_ace", avatar: "🌱", streak: 12, xp: 1240, fandom: "Anime" },
-  { handle: "@caffeine_arc", avatar: "☕", streak: 9, xp: 980, fandom: "Gaming" },
-  { handle: "@rookie_bard", avatar: "🎤", streak: 7, xp: 720, fandom: "Music" },
-  { handle: "@stream_kid", avatar: "📺", streak: 6, xp: 640, fandom: "TV" },
-  { handle: "@lore_intern", avatar: "🗝️", streak: 5, xp: 520, fandom: "Movies" },
-];
+const AVATARS = ["🐉", "📜", "🎮", "🦉", "🎧", "⭐", "🥷", "🛡️", "🦊", "🍿", "🌱", "☕", "🎤", "📺", "🗝️"];
+function avatarFor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return AVATARS[Math.abs(h) % AVATARS.length];
+}
 
 function LeaderboardRoute() {
-  const [tab, setTab] = useState<"weekly" | "rookies">("weekly");
+  const [tab, setTab] = useState<"xp" | "streak">("xp");
   const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
-  useEffect(() => setStorage(readStorage()), []);
+  const [clientId, setClientId] = useState("");
+  const [username, setLocalName] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setStorage(readStorage());
+    setClientId(getClientId());
+    setLocalName(getUsername());
+  }, []);
+
   const level = getLevelInfo(storage.xp);
 
-  const rows = tab === "weekly" ? WEEKLY_LEADERS : RISING_ROOKIES;
+  const query = useQuery<LeaderboardRow[]>({
+    queryKey: ["leaderboard", tab],
+    queryFn: () => (tab === "xp" ? fetchTopLeaderboard(10) : fetchTopByStreak(10)),
+    refetchInterval: 15_000,
+  });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("leaderboard-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leaderboard" },
+        () => query.refetch(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const rows = query.data ?? [];
+  const myRank = rows.findIndex((r) => r.client_id === clientId);
+
+  const commitName = () => {
+    const next = setUsername(username);
+    setLocalName(next);
+    setEditing(false);
+    // Reflect immediately if user is already on the board.
+    query.refetch();
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -54,68 +81,93 @@ function LeaderboardRoute() {
         <section className="mt-10">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-primary">
             <Trophy className="h-3.5 w-3.5" />
-            Global Leaderboard
+            Global Leaderboard · Live
           </span>
           <h1 className="font-display mt-5 text-5xl text-foreground">
             Top of the fandom.
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            This week's streak champs and rising rookies. New scores every Monday.
+            Real players, real streaks. Updated the moment someone finishes a quest.
           </p>
         </section>
 
         <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-1">
-          <TabBtn active={tab === "weekly"} onClick={() => setTab("weekly")}>
-            Weekly
+          <TabBtn active={tab === "xp"} onClick={() => setTab("xp")}>
+            Top XP
           </TabBtn>
-          <TabBtn active={tab === "rookies"} onClick={() => setTab("rookies")}>
-            Rising Rookies
+          <TabBtn active={tab === "streak"} onClick={() => setTab("streak")}>
+            Longest Streak
           </TabBtn>
         </div>
 
-        <ol className="mt-6 space-y-2">
-          {rows.map((p, i) => (
-            <li
-              key={p.handle}
-              className="flex items-center gap-3 rounded-2xl border border-border p-3.5 transition-all hover:border-primary/40"
-              style={{
-                background:
-                  i === 0
-                    ? "linear-gradient(90deg, oklch(0.28 0.15 122 / 0.25), oklch(0.19 0.035 285 / 0.6))"
-                    : "oklch(0.19 0.035 285 / 0.6)",
-              }}
-            >
-              <span
-                className={`font-display grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sm ${
-                  i === 0
-                    ? "bg-primary text-primary-foreground"
-                    : i < 3
-                      ? "bg-accent/30 text-accent"
-                      : "bg-secondary text-muted-foreground"
-                }`}
-              >
-                {i === 0 ? <Crown className="h-4 w-4" /> : i + 1}
-              </span>
-              <span className="text-2xl">{p.avatar}</span>
-              <div className="min-w-0 flex-1">
-                <p className="font-display truncate text-base text-foreground">
-                  {p.handle}
-                </p>
-                <p className="text-xs text-muted-foreground">{p.fandom}</p>
-              </div>
-              <div className="text-right">
-                <p className="inline-flex items-center gap-1 font-display text-sm text-primary">
-                  <Flame className="h-3.5 w-3.5" />
-                  {p.streak}
-                </p>
-                <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <Zap className="h-3 w-3" />
-                  {p.xp.toLocaleString()}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
+        {query.isLoading ? (
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading live standings…
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            No entries yet — finish today's quest to plant your flag.
+          </div>
+        ) : (
+          <ol className="mt-6 space-y-2">
+            {rows.map((p, i) => {
+              const isMe = p.client_id === clientId;
+              return (
+                <li
+                  key={p.id}
+                  className={`flex items-center gap-3 rounded-2xl border p-3.5 transition-all ${
+                    isMe ? "border-primary" : "border-border hover:border-primary/40"
+                  }`}
+                  style={{
+                    background:
+                      i === 0
+                        ? "linear-gradient(90deg, oklch(0.28 0.15 122 / 0.25), oklch(0.19 0.035 285 / 0.6))"
+                        : isMe
+                          ? "linear-gradient(90deg, oklch(0.28 0.15 122 / 0.15), oklch(0.19 0.035 285 / 0.6))"
+                          : "oklch(0.19 0.035 285 / 0.6)",
+                  }}
+                >
+                  <span
+                    className={`font-display grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sm ${
+                      i === 0
+                        ? "bg-primary text-primary-foreground"
+                        : i < 3
+                          ? "bg-accent/30 text-accent"
+                          : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {i === 0 ? <Crown className="h-4 w-4" /> : i + 1}
+                  </span>
+                  <span className="text-2xl">{avatarFor(p.client_id)}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display truncate text-base text-foreground">
+                      @{p.username}
+                      {isMe && (
+                        <span className="ml-2 rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-primary">
+                          You
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Best score {p.score}/5
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="inline-flex items-center gap-1 font-display text-sm text-primary">
+                      <Flame className="h-3.5 w-3.5" />
+                      {p.streak}
+                    </p>
+                    <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Zap className="h-3 w-3" />
+                      {p.xp.toLocaleString()}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
 
         <section
           className="mt-8 rounded-3xl border border-border p-5"
@@ -137,10 +189,41 @@ function LeaderboardRoute() {
             >
               {level.level}
             </div>
-            <div className="flex-1">
-              <p className="font-display text-base text-foreground">You · {level.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {level.totalXp} XP · Keep playing to climb the ranks.
+            <div className="min-w-0 flex-1">
+              {editing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={username}
+                    maxLength={32}
+                    onChange={(e) => setLocalName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && commitName()}
+                    className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 font-display text-sm text-foreground outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={commitName}
+                    className="rounded-lg bg-primary px-3 py-1.5 font-display text-xs uppercase tracking-wider text-primary-foreground"
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="group inline-flex items-center gap-2 text-left"
+                >
+                  <span className="font-display text-base text-foreground">
+                    @{username || "Player"} · {level.title}
+                  </span>
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-primary" />
+                </button>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {myRank >= 0
+                  ? `Ranked #${myRank + 1} on this board`
+                  : "Play today's quest to enter the board"}
+                {" · "}
+                {level.totalXp} XP
               </p>
             </div>
           </div>
