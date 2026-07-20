@@ -186,7 +186,7 @@ function Landing({
               ?
             </span>
             <p className="absolute bottom-4 font-display text-xs uppercase tracking-[0.25em] text-accent">
-              Clue 01 / 05 · {quiz?.questions[0]?.category ?? "Mystery"}
+              5 Clues Ready · {quiz?.questions[0]?.category ?? "Mystery"}
             </p>
           </div>
         </section>

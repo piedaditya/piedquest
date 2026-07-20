@@ -112,8 +112,8 @@ function Playing({
       <div className="relative z-10 mx-auto flex min-h-screen max-w-xl flex-col px-5 pb-10 pt-8">
         <div className="flex items-center justify-between">
           <Logo />
-          <span className="font-display text-xs uppercase tracking-widest text-muted-foreground">
-            Q{index + 1}/{total}
+          <span className="font-display text-xs uppercase tracking-widest text-accent">
+            Clue {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
           </span>
         </div>
 
