@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          score: number
+          streak: number
+          updated_at: string
+          username: string
+          xp: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          score?: number
+          streak?: number
+          updated_at?: string
+          username: string
+          xp?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          score?: number
+          streak?: number
+          updated_at?: string
+          username?: string
+          xp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
