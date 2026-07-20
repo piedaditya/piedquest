@@ -7,6 +7,7 @@ import {
   FANDOM_CATEGORIES,
   type DailyQuiz,
 } from "@/lib/quiz-queries";
+import { mysteryImageUrl } from "@/lib/mystery-art";
 import {
   getCurrentStreak,
   getLevelInfo,
@@ -173,22 +174,11 @@ function Landing({
             <StreakPill streak={streak} />
           </div>
 
-          <div
-            className="relative mt-5 grid aspect-square place-items-center overflow-hidden rounded-2xl border border-border"
-            style={{ background: "oklch(0.16 0.03 285)" }}
-          >
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{ background: "var(--gradient-mystery)" }}
-            />
-            <span className="relative font-display text-[10rem] leading-none text-muted-foreground/40">
-              ?
-            </span>
-            <p className="absolute bottom-4 font-display text-xs uppercase tracking-[0.25em] text-accent">
-              5 Clues Ready · {quiz?.questions[0]?.category ?? "Mystery"}
-            </p>
-          </div>
+          <MysteryArtwork
+            category={quiz?.questions[0]?.category ?? activeFandom}
+            seed={quiz?.quizDate ?? "preview"}
+            revealed={playedToday}
+          />
         </section>
 
         <section className="mt-16">
@@ -405,6 +395,56 @@ function LeaderboardTeaser() {
         <Trophy className="h-4 w-4" />
       </Link>
     </section>
+  );
+}
+
+function MysteryArtwork({
+  category,
+  seed,
+  revealed,
+}: {
+  category: string | null | undefined;
+  seed: string;
+  revealed: boolean;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const src = mysteryImageUrl(category, seed);
+  return (
+    <div
+      className="relative mt-5 grid aspect-square place-items-center overflow-hidden rounded-2xl border border-border"
+      style={{ background: "oklch(0.16 0.03 285)" }}
+    >
+      <img
+        src={src}
+        alt=""
+        aria-hidden
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className="absolute inset-0 h-full w-full object-cover transition-all duration-700"
+        style={{
+          filter: revealed ? "blur(0px) saturate(1.15)" : "blur(28px) saturate(1.4)",
+          transform: revealed ? "scale(1.02)" : "scale(1.15)",
+          opacity: loaded ? (revealed ? 0.85 : 0.55) : 0,
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background: revealed
+            ? "linear-gradient(180deg, transparent 40%, oklch(0.14 0.02 280 / 0.75))"
+            : "linear-gradient(180deg, oklch(0.14 0.02 280 / 0.55), oklch(0.14 0.02 280 / 0.85)), var(--gradient-mystery)",
+        }}
+      />
+      {!revealed && (
+        <span className="relative font-display text-[10rem] leading-none text-muted-foreground/50 drop-shadow-[0_0_30px_oklch(0.92_0.22_122/0.35)]">
+          ?
+        </span>
+      )}
+      <p className="absolute bottom-4 font-display text-xs uppercase tracking-[0.25em] text-accent">
+        {revealed ? "Solved" : "5 Clues Ready"} · {category ?? "Mystery"}
+      </p>
+    </div>
   );
 }
 
