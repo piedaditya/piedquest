@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalDateString } from "./quiz-storage";
+import { getMockPool } from "./practice-mocks";
 
 export interface Question {
   id: string;
@@ -72,11 +73,13 @@ async function fetchPracticePool(category: string | null): Promise<Question[]> {
     query = query.eq("category", category);
   }
 
+  const mocks = getMockPool(category);
   const { data, error } = await query;
-  if (error) throw error;
-  if (!data) return [];
-
-  return data.map((row) => ({
+  if (error) {
+    // Fall back to local pool if network/db fails so practice never appears empty.
+    return mocks;
+  }
+  const fromDb: Question[] = (data ?? []).map((row) => ({
     id: row.id,
     quizNumber: row.quiz_number,
     order: row.question_order,
@@ -85,6 +88,7 @@ async function fetchPracticePool(category: string | null): Promise<Question[]> {
     correctIndex: row.correct_index,
     category: row.category,
   }));
+  return [...fromDb, ...mocks];
 }
 
 export const practicePoolQueryOptions = (category: string | null) =>
