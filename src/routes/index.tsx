@@ -7,6 +7,7 @@ import {
   FANDOM_CATEGORIES,
   type DailyQuiz,
 } from "@/lib/quiz-queries";
+import { mysteryImageUrl } from "@/lib/mystery-art";
 import {
   getCurrentStreak,
   getLevelInfo,
@@ -173,22 +174,11 @@ function Landing({
             <StreakPill streak={streak} />
           </div>
 
-          <div
-            className="relative mt-5 grid aspect-square place-items-center overflow-hidden rounded-2xl border border-border"
-            style={{ background: "oklch(0.16 0.03 285)" }}
-          >
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{ background: "var(--gradient-mystery)" }}
-            />
-            <span className="relative font-display text-[10rem] leading-none text-muted-foreground/40">
-              ?
-            </span>
-            <p className="absolute bottom-4 font-display text-xs uppercase tracking-[0.25em] text-accent">
-              5 Clues Ready · {quiz?.questions[0]?.category ?? "Mystery"}
-            </p>
-          </div>
+          <MysteryArtwork
+            category={quiz?.questions[0]?.category ?? activeFandom}
+            seed={quiz?.quizDate ?? "preview"}
+            revealed={playedToday}
+          />
         </section>
 
         <section className="mt-16">
