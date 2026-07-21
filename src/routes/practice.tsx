@@ -13,6 +13,7 @@ import {
   type QuizStorage,
 } from "@/lib/quiz-storage";
 import { BgGlow, FullBleed, Loader, Logo } from "@/lib/quest-ui";
+import { bucketFor, drawFreshRound, getSeen, markSeen, resetSeen } from "@/lib/seen-questions";
 
 export const Route = createFileRoute("/practice")({
   component: PracticeRoute,
@@ -48,15 +49,6 @@ function PracticeRoute() {
   );
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 function PracticeContainer({
   fandom,
   onXpEarned,
@@ -68,8 +60,20 @@ function PracticeContainer({
 }) {
   const { data } = useSuspenseQuery(practicePoolQueryOptions(fandom));
   const [round, setRound] = useState(0);
+  const [justExhausted, setJustExhausted] = useState(false);
 
-  const questions = useMemo(() => shuffle(data ?? []).slice(0, 5), [data, round]);
+  const bucket = bucketFor(fandom);
+  const { questions, exhausted } = useMemo(() => {
+    const pool = data ?? [];
+    const seen = getSeen(bucket);
+    const { picks, exhausted } = drawFreshRound(pool, seen, 5);
+    return { questions: picks, exhausted };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, round, bucket]);
+
+  useEffect(() => {
+    setJustExhausted(exhausted);
+  }, [exhausted, round]);
 
   if (!questions.length) {
     return (
@@ -96,7 +100,10 @@ function PracticeContainer({
       questions={questions}
       fandom={fandom ?? "All Fandoms"}
       storage={storage}
+      exhaustedNotice={justExhausted}
       onFinish={(correct) => {
+        markSeen(bucket, questions.map((q) => q.id));
+        if (exhausted) resetSeen(bucket);
         recordPractice(correct);
         onXpEarned();
       }}
@@ -111,12 +118,14 @@ function PracticePlay({
   storage,
   onFinish,
   onReplay,
+  exhaustedNotice,
 }: {
   questions: Question[];
   fandom: string;
   storage: QuizStorage;
   onFinish: (correct: number) => void;
   onReplay: () => void;
+  exhaustedNotice?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -177,6 +186,11 @@ function PracticePlay({
             <p className="mt-1 text-xs text-muted-foreground">
               Now Level {level.level} · {level.title}
             </p>
+            {exhaustedNotice && (
+              <p className="mt-4 text-xs text-accent">
+                You've cleared the {fandom} pool — resetting for a fresh cycle.
+              </p>
+            )}
           </div>
           <button
             onClick={onReplay}
