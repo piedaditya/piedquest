@@ -29,6 +29,28 @@ import {
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
     context.queryClient.ensureQueryData(dailyQuizQueryOptions),
+  head: () => ({
+    meta: [
+      { title: "Piedquest | Daily Pop-Culture Trivia Challenge" },
+      {
+        name: "description",
+        content:
+          "Piedquest is a daily pop-culture trivia challenge. Guess the character, build your streak, and share your score with friends every 24 hours.",
+      },
+      {
+        property: "og:title",
+        content: "Piedquest | Daily Pop-Culture Trivia Challenge",
+      },
+      {
+        property: "og:description",
+        content:
+          "Piedquest is a daily pop-culture trivia challenge. Guess the character, build your streak, and share your score with friends every 24 hours.",
+      },
+      { property: "og:url", content: "https://piedquest.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://piedquest.lovable.app/" }],
+  }),
   component: Index,
   errorComponent: ({ error }) => (
     <FullBleed>
@@ -113,7 +135,7 @@ function Landing({
             </span>
           )}
           <h1 className="font-display mt-6 text-[3.4rem] leading-[0.95] text-foreground sm:text-6xl">
-            Test Your Fandom.
+            Piedquest: Test Your Fandom.
             <br />
             Every Single Day.
           </h1>
