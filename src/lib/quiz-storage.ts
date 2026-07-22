@@ -10,6 +10,7 @@ export interface QuizStorage {
   xp: number;
   favoriteFandom: string | null;
   practiceCount: number;
+  region: string;
 }
 
 const defaultState: QuizStorage = {
@@ -22,6 +23,7 @@ const defaultState: QuizStorage = {
   xp: 0,
   favoriteFandom: null,
   practiceCount: 0,
+  region: "Global",
 };
 
 export function getLocalDateString(d: Date = new Date()): string {
@@ -99,6 +101,13 @@ export function recordPractice(correctCount: number): QuizStorage {
 export function setFavoriteFandom(fandom: string | null): QuizStorage {
   const prev = readStorage();
   const next: QuizStorage = { ...prev, favoriteFandom: fandom };
+  writeStorage(next);
+  return next;
+}
+
+export function setRegion(region: string): QuizStorage {
+  const prev = readStorage();
+  const next: QuizStorage = { ...prev, region };
   writeStorage(next);
   return next;
 }
