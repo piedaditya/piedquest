@@ -7,6 +7,7 @@ import {
 } from "@/lib/quiz-queries";
 import { hasPlayedToday, readStorage, recordCompletion } from "@/lib/quiz-storage";
 import { BgGlow, FullBleed, Loader, Logo } from "@/lib/quest-ui";
+import { addWrongId } from "@/lib/wrong-tracker";
 
 export const Route = createFileRoute("/quiz")({
   beforeLoad: () => {
@@ -90,6 +91,7 @@ function Playing({
     const isCorrect = i === q.correctIndex;
     const nextPattern = [...pattern, isCorrect];
     setPattern(nextPattern);
+    if (!isCorrect) addWrongId(q.id);
 
     setTimeout(() => {
       setVisible(false);
