@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Home, Infinity as InfinityIcon, RefreshCw, Zap } from "lucide-react";
+import { ArrowUpRight, Home, Infinity as InfinityIcon, RefreshCw, RotateCcw, Zap } from "lucide-react";
 import {
   practicePoolQueryOptions,
   type Question,
@@ -14,6 +14,8 @@ import {
 } from "@/lib/quiz-storage";
 import { BgGlow, FullBleed, Loader, Logo } from "@/lib/quest-ui";
 import { bucketFor, drawFreshRound, getSeen, markSeen, resetSeen } from "@/lib/seen-questions";
+import { addWrongId, pickReviewQuestion, removeWrongId } from "@/lib/wrong-tracker";
+import type { Region } from "@/lib/regional-content";
 
 export const Route = createFileRoute("/practice")({
   component: PracticeRoute,
@@ -38,10 +40,12 @@ function PracticeRoute() {
   const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
   useEffect(() => setStorage(readStorage()), []);
   const fandom = storage.favoriteFandom;
+  const region = (storage.region as Region) ?? "Global";
   return (
     <Suspense fallback={<FullBleed><Loader /></FullBleed>}>
       <PracticeContainer
         fandom={fandom}
+        region={region}
         onXpEarned={() => setStorage(readStorage())}
         storage={storage}
       />
@@ -51,23 +55,37 @@ function PracticeRoute() {
 
 function PracticeContainer({
   fandom,
+  region,
   onXpEarned,
   storage,
 }: {
   fandom: string | null;
+  region: Region;
   onXpEarned: () => void;
   storage: QuizStorage;
 }) {
-  const { data } = useSuspenseQuery(practicePoolQueryOptions(fandom));
+  const { data } = useSuspenseQuery(practicePoolQueryOptions(fandom, region));
   const [round, setRound] = useState(0);
   const [justExhausted, setJustExhausted] = useState(false);
 
-  const bucket = bucketFor(fandom);
-  const { questions, exhausted } = useMemo(() => {
+  const bucket = `${bucketFor(fandom)}::${region}`;
+  const { questions, exhausted, reviewId } = useMemo(() => {
     const pool = data ?? [];
     const seen = getSeen(bucket);
     const { picks, exhausted } = drawFreshRound(pool, seen, 5);
-    return { questions: picks, exhausted };
+    // Try to inject one previously-missed question if we can find one in the
+    // pool that isn't already in this round.
+    const pickedIds = new Set(picks.map((p) => p.id));
+    const review = pickReviewQuestion(pool, pickedIds);
+    let questions = picks;
+    let reviewId: string | null = null;
+    if (review && picks.length > 0) {
+      const slot = Math.floor(Math.random() * picks.length);
+      questions = [...picks];
+      questions[slot] = review;
+      reviewId = review.id;
+    }
+    return { questions, exhausted, reviewId };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, round, bucket]);
 
@@ -99,6 +117,7 @@ function PracticeContainer({
       key={round}
       questions={questions}
       fandom={fandom ?? "All Fandoms"}
+      reviewId={reviewId}
       storage={storage}
       exhaustedNotice={justExhausted}
       onFinish={(correct) => {
@@ -115,6 +134,7 @@ function PracticeContainer({
 function PracticePlay({
   questions,
   fandom,
+  reviewId,
   storage,
   onFinish,
   onReplay,
@@ -122,6 +142,7 @@ function PracticePlay({
 }: {
   questions: Question[];
   fandom: string;
+  reviewId: string | null;
   storage: QuizStorage;
   onFinish: (correct: number) => void;
   onReplay: () => void;
@@ -136,6 +157,7 @@ function PracticePlay({
 
   const total = questions.length;
   const q = questions[index];
+  const isReview = reviewId != null && q.id === reviewId;
 
   const handlePick = (i: number) => {
     if (locked) return;
@@ -144,6 +166,13 @@ function PracticePlay({
     const isCorrect = i === q.correctIndex;
     const nextPattern = [...pattern, isCorrect];
     setPattern(nextPattern);
+    // Track wrongs so we can inject as review later; if a review question
+    // is answered correctly, retire it from the tracker.
+    if (isCorrect) {
+      if (isReview) removeWrongId(q.id);
+    } else {
+      addWrongId(q.id);
+    }
 
     setTimeout(() => {
       setVisible(false);
@@ -248,6 +277,22 @@ function PracticePlay({
           }}
           key={q.id}
         >
+          {isReview && (
+            <div
+              className="mb-4 flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3"
+              style={{ boxShadow: "0 0 24px -10px oklch(0.55 0.22 305 / 0.75)" }}
+            >
+              <RotateCcw className="h-4 w-4 text-accent" />
+              <div className="min-w-0">
+                <p className="font-display text-[10px] uppercase tracking-[0.25em] text-accent">
+                  Review Challenge
+                </p>
+                <p className="text-sm text-foreground">
+                  🔄 Let's check if you learned from last time!
+                </p>
+              </div>
+            </div>
+          )}
           {q.category && (
             <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
               {q.category}
