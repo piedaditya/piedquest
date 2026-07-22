@@ -2,6 +2,12 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalDateString } from "./quiz-storage";
 import { getMockPool } from "./practice-mocks";
+import {
+  getGKRegional,
+  getGKWorld,
+  getRegionalMovies,
+  type Region,
+} from "./regional-content";
 
 export interface Question {
   id: string;
@@ -61,19 +67,43 @@ export const FANDOM_CATEGORIES = [
   "Movies",
   "TV",
   "Music",
+  "GK World",
+  "GK Regional",
 ] as const;
 
-async function fetchPracticePool(category: string | null): Promise<Question[]> {
+async function fetchPracticePool(
+  category: string | null,
+  region: Region,
+): Promise<Question[]> {
   let query = supabase
     .from("daily_questions")
     .select("id, quiz_date, quiz_number, question_order, question, choices, correct_index, category")
     .limit(200);
 
-  if (category && category !== "All Fandoms") {
+  if (category && category !== "All Fandoms" && category !== "GK World" && category !== "GK Regional") {
     query = query.eq("category", category);
   }
 
-  const mocks = getMockPool(category);
+  // Category-specific mocks. Movies is region-aware; GK categories are
+  // sourced entirely from the regional-content pools.
+  let mocks: Question[] = [];
+  if (category === "GK World") {
+    mocks = getGKWorld();
+  } else if (category === "GK Regional") {
+    mocks = getGKRegional(region);
+  } else if (category === "Movies") {
+    mocks = [...getMockPool("Movies"), ...getRegionalMovies(region)];
+  } else if (!category || category === "All Fandoms") {
+    mocks = [
+      ...getMockPool(null),
+      ...getRegionalMovies(region),
+      ...getGKWorld(),
+      ...getGKRegional(region),
+    ];
+  } else {
+    mocks = getMockPool(category);
+  }
+
   const { data, error } = await query;
   if (error) {
     // Fall back to local pool if network/db fails so practice never appears empty.
@@ -91,9 +121,9 @@ async function fetchPracticePool(category: string | null): Promise<Question[]> {
   return [...fromDb, ...mocks];
 }
 
-export const practicePoolQueryOptions = (category: string | null) =>
+export const practicePoolQueryOptions = (category: string | null, region: Region = "Global") =>
   queryOptions({
-    queryKey: ["practice-pool", category ?? "all"],
-    queryFn: () => fetchPracticePool(category),
+    queryKey: ["practice-pool", category ?? "all", region],
+    queryFn: () => fetchPracticePool(category, region),
     staleTime: 10 * 60_000,
   });
