@@ -14,8 +14,10 @@ import {
   hasPlayedToday,
   readStorage,
   setFavoriteFandom,
+  setRegion,
   type QuizStorage,
 } from "@/lib/quiz-storage";
+import { REGIONS, type Region } from "@/lib/regional-content";
 import {
   BgGlow,
   FullBleed,
@@ -91,6 +93,7 @@ function LandingContainer() {
       quiz={data}
       storage={storage}
       onFandomChange={(f) => setStorage(setFavoriteFandom(f))}
+      onRegionChange={(r) => setStorage(setRegion(r))}
       streak={getCurrentStreak(storage)}
       playedToday={hasPlayedToday(storage)}
     />
@@ -101,17 +104,20 @@ function Landing({
   quiz,
   storage,
   onFandomChange,
+  onRegionChange,
   streak,
   playedToday,
 }: {
   quiz: DailyQuiz | null;
   storage: QuizStorage;
   onFandomChange: (f: string | null) => void;
+  onRegionChange: (r: Region) => void;
   streak: number;
   playedToday: boolean;
 }) {
   const level = getLevelInfo(storage.xp);
   const activeFandom = storage.favoriteFandom ?? "All Fandoms";
+  const activeRegion = (storage.region as Region) ?? "Global";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -174,6 +180,8 @@ function Landing({
         </section>
 
         <FandomHub active={activeFandom} onChange={onFandomChange} />
+
+        <RegionSelector active={activeRegion} onChange={onRegionChange} />
 
         {playedToday && <NextQuestCountdown />}
 
@@ -341,6 +349,53 @@ function FandomHub({
               style={isActive ? { boxShadow: "0 0 20px -8px oklch(0.92 0.22 122 / 0.6)" } : undefined}
             >
               {cat}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function RegionSelector({
+  active,
+  onChange,
+}: {
+  active: Region;
+  onChange: (r: Region) => void;
+}) {
+  return (
+    <section className="mt-8">
+      <div className="flex items-baseline justify-between">
+        <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
+          Select Your Region
+        </p>
+        <span className="text-xs text-muted-foreground">
+          Tailors Movies &amp; GK
+        </span>
+      </div>
+      <h2 className="font-display mt-2 text-2xl text-foreground">
+        Play from your part of the world.
+      </h2>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {REGIONS.map((r) => {
+          const isActive = active === r;
+          return (
+            <button
+              key={r}
+              onClick={() => onChange(r)}
+              className={`rounded-full border px-4 py-2 font-display text-xs uppercase tracking-wider transition-all ${
+                isActive
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground"
+              }`}
+              style={
+                isActive
+                  ? { boxShadow: "0 0 20px -8px oklch(0.55 0.22 305 / 0.6)" }
+                  : undefined
+              }
+            >
+              {r}
             </button>
           );
         })}
