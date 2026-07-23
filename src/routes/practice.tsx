@@ -22,7 +22,7 @@ export const Route = createFileRoute("/practice")({
   errorComponent: ({ error }) => (
     <FullBleed>
       <div className="max-w-md text-center">
-        <h2 className="font-display text-3xl">Practice didn't load</h2>
+        <h2 className="font-display text-3xl">Custom Quest didn't load</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     </FullBleed>
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/practice")({
   notFoundComponent: () => (
     <FullBleed>
       <div className="text-center">
-        <h2 className="font-display text-3xl">No practice questions</h2>
+        <h2 className="font-display text-3xl">No custom quest questions</h2>
       </div>
     </FullBleed>
   ),
@@ -203,7 +203,7 @@ function PracticePlay({
           <div className="mt-14 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-accent">
               <InfinityIcon className="h-3.5 w-3.5" />
-              Practice Round · {fandom}
+              Custom Quest · {fandom}
             </span>
             <h1 className="font-display mt-6 text-6xl text-foreground">
               {correct}/{total}
@@ -248,7 +248,7 @@ function PracticePlay({
         <div className="flex items-center justify-between">
           <Logo />
           <span className="font-display text-xs uppercase tracking-widest text-accent">
-            Practice · Clue {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+            Custom Quest · Clue {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
           </span>
         </div>
 
@@ -349,7 +349,7 @@ function PracticePlay({
           to="/"
           className="mt-6 inline-flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
         >
-          <ArrowUpRight className="h-3 w-3 rotate-180" /> Quit practice
+          <ArrowUpRight className="h-3 w-3 rotate-180" /> Quit quest
         </Link>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalDateString } from "./quiz-storage";
 import { getMockPool } from "./practice-mocks";
+import { buildFallbackDailyQuiz } from "./daily-fallback";
 import {
   getGKRegional,
   getGKWorld,
@@ -33,8 +34,11 @@ async function fetchTodaysQuiz(): Promise<DailyQuiz | null> {
     .eq("quiz_date", today)
     .order("question_order", { ascending: true });
 
-  if (error) throw error;
-  if (!data || data.length === 0) return null;
+  if (error || !data || data.length === 0) {
+    // Guarantee a daily quest exists every day, worldwide. Falls back to a
+    // deterministic pick from the globally-famous mock pool.
+    return buildFallbackDailyQuiz(today);
+  }
 
   const questions: Question[] = data.map((row) => ({
     id: row.id,
