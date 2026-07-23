@@ -22,7 +22,7 @@ export const Route = createFileRoute("/practice")({
   errorComponent: ({ error }) => (
     <FullBleed>
       <div className="max-w-md text-center">
-        <h2 className="font-display text-3xl">Practice didn't load</h2>
+        <h2 className="font-display text-3xl">Custom Quest didn't load</h2>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     </FullBleed>
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/practice")({
   notFoundComponent: () => (
     <FullBleed>
       <div className="text-center">
-        <h2 className="font-display text-3xl">No practice questions</h2>
+        <h2 className="font-display text-3xl">No custom quest questions</h2>
       </div>
     </FullBleed>
   ),
