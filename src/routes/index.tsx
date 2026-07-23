@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useState } from "react";
-import { ArrowUpRight, Clock, Flame, Infinity as InfinityIcon, Share2, Sparkles, Trophy, Users, Zap } from "lucide-react";
+import { ArrowUpRight, Clock, Flame, Infinity as InfinityIcon, Share2, Sparkles, Target, Trophy, Users, Zap } from "lucide-react";
 import {
   dailyQuizQueryOptions,
   FANDOM_CATEGORIES,
@@ -135,11 +135,7 @@ function Landing({
         />
 
         <section className="mt-10">
-          {quiz ? <LivePill quizNumber={quiz.quizNumber} /> : (
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1.5 font-display text-xs uppercase tracking-widest text-muted-foreground">
-              No quest today
-            </span>
-          )}
+          {quiz && <LivePill quizNumber={quiz.quizNumber} />}
           <h1 className="font-display mt-6 text-[3.4rem] leading-[0.95] text-foreground sm:text-6xl">
             Piedquest: Test Your Fandom.
             <br />
@@ -150,25 +146,14 @@ function Landing({
             every 24 hours.
           </p>
 
-          {quiz ? (
-            <Link
-              to={playedToday ? "/results" : "/quiz"}
-              className="group relative mt-8 inline-flex items-center gap-3 rounded-2xl bg-primary px-6 py-4 font-display text-lg text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.99]"
-              style={{ boxShadow: "var(--shadow-glow)" }}
-            >
-              {playedToday ? "View Today's Results" : "Play Today's Challenge"}
-              <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
-          ) : (
-            <Link
-              to="/practice"
-              className="group relative mt-8 inline-flex items-center gap-3 rounded-2xl bg-primary px-6 py-4 font-display text-lg text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.99]"
-              style={{ boxShadow: "var(--shadow-glow)" }}
-            >
-              Try Practice Mode
-              <ArrowUpRight className="h-5 w-5" />
-            </Link>
-          )}
+          <Link
+            to={playedToday ? "/results" : "/quiz"}
+            className="group relative mt-8 inline-flex items-center gap-3 rounded-2xl bg-primary px-6 py-4 font-display text-lg text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.99]"
+            style={{ boxShadow: "var(--shadow-glow)" }}
+          >
+            {playedToday ? "View Today's Results" : "Play Today's Challenge"}
+            <ArrowUpRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
 
           <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
@@ -329,7 +314,7 @@ function FandomHub({
         <p className="font-display text-xs uppercase tracking-[0.25em] text-primary">
           Fandom Hub
         </p>
-        <span className="text-xs text-muted-foreground">Filters practice</span>
+        <span className="text-xs text-muted-foreground">Powers Custom Quests</span>
       </div>
       <h2 className="font-display mt-2 text-2xl text-foreground">
         Pick your fandom.
@@ -353,6 +338,13 @@ function FandomHub({
           );
         })}
       </div>
+      <Link
+        to="/practice"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary/15 border border-primary/40 px-5 py-3.5 font-display text-base text-primary transition-all hover:bg-primary/25"
+      >
+        <Target className="h-4 w-4" />
+        Start {active} Quest
+      </Link>
     </section>
   );
 }
@@ -420,20 +412,20 @@ function PracticeCard({ fandom }: { fandom: string }) {
         </div>
         <div>
           <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
-            Practice Mode
+            Custom Quests
           </p>
-          <p className="font-display text-xl text-foreground">Infinite Archive</p>
+          <p className="font-display text-xl text-foreground">Selectable Fandom Mode</p>
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
-        Warm up on past questions from <span className="text-primary">{fandom}</span>.
+        Launch an unlimited 5-question challenge from <span className="text-primary">{fandom}</span>.
         Doesn't affect your streak — but every correct answer still earns +10 XP.
       </p>
       <Link
         to="/practice"
         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 px-5 py-3.5 font-display text-base text-primary transition-all hover:bg-primary/20"
       >
-        Start Practice Round
+        Start Custom Quest
         <ArrowUpRight className="h-4 w-4" />
       </Link>
     </section>
