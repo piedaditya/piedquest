@@ -41,11 +41,13 @@ function PracticeRoute() {
   useEffect(() => setStorage(readStorage()), []);
   const fandom = storage.favoriteFandom;
   const region = (storage.region as Region) ?? "Global";
+  const gkScope = storage.gkScope ?? "global";
   return (
     <Suspense fallback={<FullBleed><Loader /></FullBleed>}>
       <PracticeContainer
         fandom={fandom}
         region={region}
+        gkScope={gkScope}
         onXpEarned={() => setStorage(readStorage())}
         storage={storage}
       />
@@ -56,19 +58,23 @@ function PracticeRoute() {
 function PracticeContainer({
   fandom,
   region,
+  gkScope,
   onXpEarned,
   storage,
 }: {
   fandom: string | null;
   region: Region;
+  gkScope: "global" | "regional";
   onXpEarned: () => void;
   storage: QuizStorage;
 }) {
-  const { data } = useSuspenseQuery(practicePoolQueryOptions(fandom, region));
+  const { data } = useSuspenseQuery(
+    practicePoolQueryOptions(fandom, region, gkScope),
+  );
   const [round, setRound] = useState(0);
   const [justExhausted, setJustExhausted] = useState(false);
 
-  const bucket = `${bucketFor(fandom)}::${region}`;
+  const bucket = `${bucketFor(fandom)}::${region}::${gkScope}`;
   const { questions, exhausted, reviewId } = useMemo(() => {
     const pool = data ?? [];
     const seen = getSeen(bucket);
