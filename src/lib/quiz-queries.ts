@@ -92,7 +92,10 @@ async function fetchPracticePool(
   // sourced entirely from the regional-content pools.
   let mocks: Question[] = [];
   if (category === "GK") {
-    mocks = gkScope === "regional" ? getGKRegional(region) : getGKWorld();
+    mocks =
+      gkScope === "regional"
+        ? getGKRegional(region === "Global" ? "India" : region)
+        : getGKWorld();
   } else if (category === "Movies") {
     mocks = [...getMockPool("Movies"), ...getRegionalMovies(region)];
   } else if (!category || category === "All Fandoms") {
