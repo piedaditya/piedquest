@@ -71,30 +71,28 @@ export const FANDOM_CATEGORIES = [
   "Movies",
   "TV",
   "Music",
-  "GK World",
-  "GK Regional",
+  "GK",
 ] as const;
 
 async function fetchPracticePool(
   category: string | null,
   region: Region,
+  gkScope: "global" | "regional" = "global",
 ): Promise<Question[]> {
   let query = supabase
     .from("daily_questions")
     .select("id, quiz_date, quiz_number, question_order, question, choices, correct_index, category")
     .limit(200);
 
-  if (category && category !== "All Fandoms" && category !== "GK World" && category !== "GK Regional") {
+  if (category && category !== "All Fandoms" && category !== "GK") {
     query = query.eq("category", category);
   }
 
   // Category-specific mocks. Movies is region-aware; GK categories are
   // sourced entirely from the regional-content pools.
   let mocks: Question[] = [];
-  if (category === "GK World") {
-    mocks = getGKWorld();
-  } else if (category === "GK Regional") {
-    mocks = getGKRegional(region);
+  if (category === "GK") {
+    mocks = gkScope === "regional" ? getGKRegional(region) : getGKWorld();
   } else if (category === "Movies") {
     mocks = [...getMockPool("Movies"), ...getRegionalMovies(region)];
   } else if (!category || category === "All Fandoms") {
@@ -125,9 +123,13 @@ async function fetchPracticePool(
   return [...fromDb, ...mocks];
 }
 
-export const practicePoolQueryOptions = (category: string | null, region: Region = "Global") =>
+export const practicePoolQueryOptions = (
+  category: string | null,
+  region: Region = "Global",
+  gkScope: "global" | "regional" = "global",
+) =>
   queryOptions({
-    queryKey: ["practice-pool", category ?? "all", region],
-    queryFn: () => fetchPracticePool(category, region),
+    queryKey: ["practice-pool", category ?? "all", region, gkScope],
+    queryFn: () => fetchPracticePool(category, region, gkScope),
     staleTime: 10 * 60_000,
   });

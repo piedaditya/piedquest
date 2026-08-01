@@ -11,6 +11,7 @@ export interface QuizStorage {
   favoriteFandom: string | null;
   practiceCount: number;
   region: string;
+  gkScope: "global" | "regional";
 }
 
 const defaultState: QuizStorage = {
@@ -24,6 +25,7 @@ const defaultState: QuizStorage = {
   favoriteFandom: null,
   practiceCount: 0,
   region: "Global",
+  gkScope: "global",
 };
 
 export function getLocalDateString(d: Date = new Date()): string {
@@ -108,6 +110,13 @@ export function setFavoriteFandom(fandom: string | null): QuizStorage {
 export function setRegion(region: string): QuizStorage {
   const prev = readStorage();
   const next: QuizStorage = { ...prev, region };
+  writeStorage(next);
+  return next;
+}
+
+export function setGkScope(gkScope: "global" | "regional"): QuizStorage {
+  const prev = readStorage();
+  const next: QuizStorage = { ...prev, gkScope };
   writeStorage(next);
   return next;
 }
