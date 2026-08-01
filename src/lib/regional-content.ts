@@ -1,11 +1,46 @@
 import type { Question } from "./quiz-queries";
 
-export const REGIONS = ["Global", "India", "USA", "UK"] as const;
-export type Region = (typeof REGIONS)[number];
+export interface Country {
+  name: string;
+  flag: string;
+}
+
+// 22 famous worldwide options for Regional GK.
+export const COUNTRIES: Country[] = [
+  { name: "India", flag: "🇮🇳" },
+  { name: "United States", flag: "🇺🇸" },
+  { name: "United Kingdom", flag: "🇬🇧" },
+  { name: "France", flag: "🇫🇷" },
+  { name: "Italy", flag: "🇮🇹" },
+  { name: "Russia", flag: "🇷🇺" },
+  { name: "Japan", flag: "🇯🇵" },
+  { name: "South Korea", flag: "🇰🇷" },
+  { name: "Germany", flag: "🇩🇪" },
+  { name: "Canada", flag: "🇨🇦" },
+  { name: "Australia", flag: "🇦🇺" },
+  { name: "Brazil", flag: "🇧🇷" },
+  { name: "Egypt", flag: "🇪🇬" },
+  { name: "South Africa", flag: "🇿🇦" },
+  { name: "Spain", flag: "🇪🇸" },
+  { name: "Mexico", flag: "🇲🇽" },
+  { name: "China", flag: "🇨🇳" },
+  { name: "Nigeria", flag: "🇳🇬" },
+  { name: "Argentina", flag: "🇦🇷" },
+  { name: "United Arab Emirates", flag: "🇦🇪" },
+  { name: "Indonesia", flag: "🇮🇩" },
+  { name: "Saudi Arabia", flag: "🇸🇦" },
+];
+
+export const REGIONS = ["Global", ...COUNTRIES.map((c) => c.name)] as const;
+export type Region = string;
+
+export function flagFor(region: string): string {
+  return COUNTRIES.find((c) => c.name === region)?.flag ?? "🌐";
+}
 
 type Mock = { key: string; question: string; choices: string[]; correctIndex: number };
 
-const moviesByRegion: Record<Region, Mock[]> = {
+const moviesByRegion: Record<string, Mock[]> = {
   Global: [
     { key: "mg1", question: "Which film won the Palme d'Or in 2019?", choices: ["Roma", "Parasite", "Shoplifters", "The Square"], correctIndex: 1 },
     { key: "mg2", question: "Which studio produced 'Spirited Away'?", choices: ["Studio Ghibli", "Toei", "Madhouse", "Bones"], correctIndex: 0 },
@@ -32,7 +67,7 @@ const moviesByRegion: Record<Region, Mock[]> = {
     { key: "min10", question: "Who composed the score for 'Roja' (1992)?", choices: ["Ilaiyaraaja", "A. R. Rahman", "R. D. Burman", "S. D. Burman"], correctIndex: 1 },
     { key: "min11", question: "'Lagaan' (2001) was nominated for which Oscar?", choices: ["Best Picture", "Best Foreign Language Film", "Best Director", "Best Song"], correctIndex: 1 },
   ],
-  USA: [
+  "United States": [
     { key: "mus1", question: "Who directed 'Citizen Kane' (1941)?", choices: ["Orson Welles", "John Ford", "Alfred Hitchcock", "Frank Capra"], correctIndex: 0 },
     { key: "mus2", question: "'The Godfather' (1972) is set primarily in?", choices: ["Chicago", "New York", "Boston", "Los Angeles"], correctIndex: 1 },
     { key: "mus3", question: "Who directed 'Do the Right Thing' (1989)?", choices: ["Spike Lee", "John Singleton", "Jordan Peele", "Barry Jenkins"], correctIndex: 0 },
@@ -45,7 +80,7 @@ const moviesByRegion: Record<Region, Mock[]> = {
     { key: "mus10", question: "'Nomadland' (2020) director?", choices: ["Chloé Zhao", "Kelly Reichardt", "Sofia Coppola", "Ava DuVernay"], correctIndex: 0 },
     { key: "mus11", question: "Which studio released 'Titanic' (1997)?", choices: ["Warner Bros.", "Paramount / 20th Century Fox", "Universal", "Sony"], correctIndex: 1 },
   ],
-  UK: [
+  "United Kingdom": [
     { key: "muk1", question: "Who directed 'Trainspotting' (1996)?", choices: ["Guy Ritchie", "Danny Boyle", "Ken Loach", "Mike Leigh"], correctIndex: 1 },
     { key: "muk2", question: "'Four Weddings and a Funeral' starred?", choices: ["Colin Firth", "Hugh Grant", "Jude Law", "Ewan McGregor"], correctIndex: 1 },
     { key: "muk3", question: "Ealing comedy with Alec Guinness in many roles?", choices: ["The Ladykillers", "Kind Hearts and Coronets", "Passport to Pimlico", "The Lavender Hill Mob"], correctIndex: 1 },
@@ -77,8 +112,7 @@ const gkWorld: Mock[] = [
   { key: "gw14", question: "Statue of Liberty was a gift from?", choices: ["UK", "Spain", "France", "Netherlands"], correctIndex: 2 },
 ];
 
-const gkRegional: Record<Region, Mock[]> = {
-  Global: gkWorld,
+const gkByCountry: Record<string, Mock[]> = {
   India: [
     { key: "gin1", question: "Who was the first President of India?", choices: ["Rajendra Prasad", "S. Radhakrishnan", "Zakir Husain", "V. V. Giri"], correctIndex: 0 },
     { key: "gin2", question: "In which year did India gain independence?", choices: ["1945", "1946", "1947", "1950"], correctIndex: 2 },
@@ -95,7 +129,7 @@ const gkRegional: Record<Region, Mock[]> = {
     { key: "gin13", question: "Tropic of Cancer passes through how many Indian states?", choices: ["6", "7", "8", "9"], correctIndex: 2 },
     { key: "gin14", question: "Who founded the Maurya Empire?", choices: ["Ashoka", "Chandragupta Maurya", "Bindusara", "Bimbisara"], correctIndex: 1 },
   ],
-  USA: [
+  "United States": [
     { key: "gus1", question: "First US President?", choices: ["Jefferson", "George Washington", "John Adams", "Madison"], correctIndex: 1 },
     { key: "gus2", question: "Declaration of Independence signed in?", choices: ["1774", "1775", "1776", "1783"], correctIndex: 2 },
     { key: "gus3", question: "How many amendments in the Bill of Rights?", choices: ["5", "8", "10", "12"], correctIndex: 2 },
@@ -111,7 +145,7 @@ const gkRegional: Record<Region, Mock[]> = {
     { key: "gus13", question: "19th Amendment (1920) granted?", choices: ["Abolition of slavery", "Women's suffrage", "Prohibition", "Income tax"], correctIndex: 1 },
     { key: "gus14", question: "President who issued the Emancipation Proclamation?", choices: ["Grant", "Lincoln", "Johnson", "Jefferson"], correctIndex: 1 },
   ],
-  UK: [
+  "United Kingdom": [
     { key: "guk1", question: "Current UK monarch (as of 2026)?", choices: ["Elizabeth II", "Charles III", "William V", "George VII"], correctIndex: 1 },
     { key: "guk2", question: "Magna Carta signed in?", choices: ["1066", "1215", "1415", "1649"], correctIndex: 1 },
     { key: "guk3", question: "First female UK Prime Minister?", choices: ["Theresa May", "Margaret Thatcher", "Liz Truss", "Angela Merkel"], correctIndex: 1 },
@@ -126,6 +160,234 @@ const gkRegional: Record<Region, Mock[]> = {
     { key: "guk12", question: "BBC was founded in?", choices: ["1912", "1922", "1932", "1942"], correctIndex: 1 },
     { key: "guk13", question: "Longest-reigning UK monarch?", choices: ["Victoria", "Elizabeth II", "George III", "Henry VIII"], correctIndex: 1 },
     { key: "guk14", question: "Good Friday Agreement (1998) concerned?", choices: ["Scotland", "Wales", "Northern Ireland", "Cornwall"], correctIndex: 2 },
+  ],
+  France: [
+    { key: "gfr1", question: "In which year did the French Revolution begin?", choices: ["1776", "1789", "1799", "1812"], correctIndex: 1 },
+    { key: "gfr2", question: "What is the longest river entirely within France?", choices: ["Seine", "Rhône", "Loire", "Garonne"], correctIndex: 2 },
+    { key: "gfr3", question: "Who was crowned Emperor of the French in 1804?", choices: ["Louis XVI", "Napoleon Bonaparte", "Charles X", "Robespierre"], correctIndex: 1 },
+    { key: "gfr4", question: "Which document was adopted in France in 1789?", choices: ["Magna Carta", "Declaration of the Rights of Man", "Code Civil", "Treaty of Versailles"], correctIndex: 1 },
+    { key: "gfr5", question: "France's national day, Bastille Day, is on?", choices: ["1 May", "14 July", "11 November", "8 May"], correctIndex: 1 },
+    { key: "gfr6", question: "Which mountain range separates France and Spain?", choices: ["Alps", "Pyrenees", "Jura", "Vosges"], correctIndex: 1 },
+    { key: "gfr7", question: "The Fifth Republic was founded in?", choices: ["1946", "1958", "1968", "1981"], correctIndex: 1 },
+    { key: "gfr8", question: "Which French region is famous for D-Day landings?", choices: ["Brittany", "Normandy", "Provence", "Alsace"], correctIndex: 1 },
+    { key: "gfr9", question: "The Louvre Museum is located in?", choices: ["Lyon", "Paris", "Marseille", "Nice"], correctIndex: 1 },
+    { key: "gfr10", question: "Who led Free France during World War II?", choices: ["Philippe Pétain", "Charles de Gaulle", "Georges Clemenceau", "Léon Blum"], correctIndex: 1 },
+  ],
+  Italy: [
+    { key: "git1", question: "In which year was Italy unified as a kingdom?", choices: ["1848", "1861", "1871", "1918"], correctIndex: 1 },
+    { key: "git2", question: "Who led the Expedition of the Thousand in 1860?", choices: ["Cavour", "Giuseppe Garibaldi", "Mazzini", "Victor Emmanuel II"], correctIndex: 1 },
+    { key: "git3", question: "Which volcano destroyed Pompeii in AD 79?", choices: ["Etna", "Vesuvius", "Stromboli", "Vulcano"], correctIndex: 1 },
+    { key: "git4", question: "Longest river in Italy?", choices: ["Tiber", "Arno", "Po", "Adige"], correctIndex: 2 },
+    { key: "git5", question: "Italy became a republic in which year?", choices: ["1943", "1946", "1948", "1950"], correctIndex: 1 },
+    { key: "git6", question: "Which city was the capital of the Roman Empire?", choices: ["Milan", "Rome", "Naples", "Ravenna"], correctIndex: 1 },
+    { key: "git7", question: "The Renaissance began in which Italian city?", choices: ["Venice", "Florence", "Turin", "Genoa"], correctIndex: 1 },
+    { key: "git8", question: "Which island is the largest in the Mediterranean?", choices: ["Sardinia", "Sicily", "Corsica", "Crete"], correctIndex: 1 },
+    { key: "git9", question: "Independent state enclaved within Rome?", choices: ["San Marino", "Vatican City", "Monaco", "Andorra"], correctIndex: 1 },
+    { key: "git10", question: "Who was Italy's Fascist leader from 1922?", choices: ["Badoglio", "Benito Mussolini", "Giolitti", "Ciano"], correctIndex: 1 },
+  ],
+  Russia: [
+    { key: "gru1", question: "In which year did the Russian Revolution take place?", choices: ["1905", "1917", "1922", "1929"], correctIndex: 1 },
+    { key: "gru2", question: "Which lake is the deepest in the world?", choices: ["Ladoga", "Baikal", "Onega", "Caspian"], correctIndex: 1 },
+    { key: "gru3", question: "The Soviet Union dissolved in?", choices: ["1989", "1990", "1991", "1993"], correctIndex: 2 },
+    { key: "gru4", question: "Who was the first Tsar of all Russia?", choices: ["Peter the Great", "Ivan IV (the Terrible)", "Boris Godunov", "Nicholas I"], correctIndex: 1 },
+    { key: "gru5", question: "Which city was renamed Leningrad in 1924?", choices: ["Moscow", "Saint Petersburg", "Volgograd", "Kazan"], correctIndex: 1 },
+    { key: "gru6", question: "The Trans-Siberian Railway runs from Moscow to?", choices: ["Irkutsk", "Vladivostok", "Novosibirsk", "Khabarovsk"], correctIndex: 1 },
+    { key: "gru7", question: "First human in space, launched by the USSR?", choices: ["Alexei Leonov", "Yuri Gagarin", "Valentina Tereshkova", "German Titov"], correctIndex: 1 },
+    { key: "gru8", question: "Which mountain range divides Europe and Asia in Russia?", choices: ["Caucasus", "Urals", "Altai", "Sayan"], correctIndex: 1 },
+    { key: "gru9", question: "Russia's currency is the?", choices: ["Rouble", "Hryvnia", "Tenge", "Lira"], correctIndex: 0 },
+    { key: "gru10", question: "Battle of Stalingrad ended in which year?", choices: ["1941", "1942", "1943", "1945"], correctIndex: 2 },
+  ],
+  Japan: [
+    { key: "gjp1", question: "The Meiji Restoration began in?", choices: ["1853", "1868", "1889", "1912"], correctIndex: 1 },
+    { key: "gjp2", question: "Highest mountain in Japan?", choices: ["Mount Fuji", "Mount Aso", "Mount Hotaka", "Mount Tate"], correctIndex: 0 },
+    { key: "gjp3", question: "Japan's parliament is called the?", choices: ["Diet", "Duma", "Sejm", "Knesset"], correctIndex: 0 },
+    { key: "gjp4", question: "Which city was Japan's capital before Tokyo?", choices: ["Osaka", "Kyoto", "Nara", "Kobe"], correctIndex: 1 },
+    { key: "gjp5", question: "Japan's four main islands include Honshu, Kyushu, Shikoku and?", choices: ["Okinawa", "Hokkaido", "Sado", "Awaji"], correctIndex: 1 },
+    { key: "gjp6", question: "Military rulers of feudal Japan were called?", choices: ["Daimyo", "Shogun", "Samurai", "Ronin"], correctIndex: 1 },
+    { key: "gjp7", question: "Japan's currency is the?", choices: ["Won", "Yuan", "Yen", "Baht"], correctIndex: 2 },
+    { key: "gjp8", question: "Which era began in Japan in 2019?", choices: ["Heisei", "Reiwa", "Showa", "Taisho"], correctIndex: 1 },
+    { key: "gjp9", question: "Japan's high-speed train is known as the?", choices: ["Maglev", "Shinkansen", "KTX", "TGV"], correctIndex: 1 },
+    { key: "gjp10", question: "Indigenous religion of Japan?", choices: ["Shinto", "Taoism", "Jainism", "Confucianism"], correctIndex: 0 },
+  ],
+  "South Korea": [
+    { key: "gkr1", question: "The Korean War began in which year?", choices: ["1945", "1950", "1953", "1960"], correctIndex: 1 },
+    { key: "gkr2", question: "Capital of South Korea?", choices: ["Busan", "Seoul", "Incheon", "Daegu"], correctIndex: 1 },
+    { key: "gkr3", question: "Korean alphabet created under King Sejong is called?", choices: ["Hanja", "Hangul", "Kana", "Pinyin"], correctIndex: 1 },
+    { key: "gkr4", question: "Which dynasty ruled Korea from 1392 to 1897?", choices: ["Goryeo", "Joseon", "Silla", "Baekje"], correctIndex: 1 },
+    { key: "gkr5", question: "South Korea's currency?", choices: ["Yen", "Won", "Yuan", "Ringgit"], correctIndex: 1 },
+    { key: "gkr6", question: "Seoul hosted the Summer Olympics in?", choices: ["1984", "1988", "1992", "2002"], correctIndex: 1 },
+    { key: "gkr7", question: "The DMZ separates South Korea from?", choices: ["China", "North Korea", "Japan", "Russia"], correctIndex: 1 },
+    { key: "gkr8", question: "Which river flows through Seoul?", choices: ["Nakdong", "Han", "Geum", "Imjin"], correctIndex: 1 },
+    { key: "gkr9", question: "Korea was liberated from Japanese rule in?", choices: ["1919", "1945", "1948", "1950"], correctIndex: 1 },
+    { key: "gkr10", question: "PyeongChang hosted which Games in 2018?", choices: ["Summer Olympics", "Winter Olympics", "Asian Games", "World Cup"], correctIndex: 1 },
+  ],
+  Germany: [
+    { key: "gde1", question: "The Berlin Wall fell in which year?", choices: ["1987", "1989", "1990", "1991"], correctIndex: 1 },
+    { key: "gde2", question: "Germany was reunified in?", choices: ["1989", "1990", "1991", "1993"], correctIndex: 1 },
+    { key: "gde3", question: "Who was the first Chancellor of unified Germany in 1871?", choices: ["Otto von Bismarck", "Wilhelm I", "Hindenburg", "Adenauer"], correctIndex: 0 },
+    { key: "gde4", question: "Longest river flowing through Germany?", choices: ["Elbe", "Rhine", "Danube", "Oder"], correctIndex: 1 },
+    { key: "gde5", question: "The German parliament building in Berlin is the?", choices: ["Bundesrat", "Reichstag", "Kanzleramt", "Rathaus"], correctIndex: 1 },
+    { key: "gde6", question: "Martin Luther began the Reformation in?", choices: ["1417", "1517", "1617", "1717"], correctIndex: 1 },
+    { key: "gde7", question: "Germany's federal states number?", choices: ["12", "14", "16", "18"], correctIndex: 2 },
+    { key: "gde8", question: "Which German city hosts Oktoberfest?", choices: ["Berlin", "Munich", "Hamburg", "Cologne"], correctIndex: 1 },
+    { key: "gde9", question: "Germany's post-war constitution is called the?", choices: ["Basic Law", "Weimar Charter", "Federal Code", "Bundesakt"], correctIndex: 0 },
+    { key: "gde10", question: "Who was Chancellor of Germany from 2005 to 2021?", choices: ["Gerhard Schröder", "Angela Merkel", "Helmut Kohl", "Olaf Scholz"], correctIndex: 1 },
+  ],
+  Canada: [
+    { key: "gca1", question: "Canadian Confederation took place in?", choices: ["1776", "1812", "1867", "1931"], correctIndex: 2 },
+    { key: "gca2", question: "Capital city of Canada?", choices: ["Toronto", "Ottawa", "Vancouver", "Montreal"], correctIndex: 1 },
+    { key: "gca3", question: "Canada's official languages are English and?", choices: ["Spanish", "French", "Inuktitut", "German"], correctIndex: 1 },
+    { key: "gca4", question: "How many provinces does Canada have?", choices: ["8", "10", "12", "13"], correctIndex: 1 },
+    { key: "gca5", question: "Longest river in Canada?", choices: ["Yukon", "Mackenzie", "Fraser", "St. Lawrence"], correctIndex: 1 },
+    { key: "gca6", question: "Canada's first Prime Minister?", choices: ["Wilfrid Laurier", "John A. Macdonald", "Lester Pearson", "Mackenzie King"], correctIndex: 1 },
+    { key: "gca7", question: "Which territory was created in 1999?", choices: ["Yukon", "Nunavut", "Northwest Territories", "Labrador"], correctIndex: 1 },
+    { key: "gca8", question: "Symbol on the Canadian flag?", choices: ["Beaver", "Maple leaf", "Bear", "Goose"], correctIndex: 1 },
+    { key: "gca9", question: "Largest Canadian province by area?", choices: ["Ontario", "Quebec", "Alberta", "British Columbia"], correctIndex: 1 },
+    { key: "gca10", question: "Canada patriated its constitution in?", choices: ["1965", "1976", "1982", "1995"], correctIndex: 2 },
+  ],
+  Australia: [
+    { key: "gau1", question: "Australia became a federation in?", choices: ["1788", "1851", "1901", "1945"], correctIndex: 2 },
+    { key: "gau2", question: "Capital city of Australia?", choices: ["Sydney", "Melbourne", "Canberra", "Perth"], correctIndex: 2 },
+    { key: "gau3", question: "The Great Barrier Reef lies off which state?", choices: ["Queensland", "Victoria", "Tasmania", "South Australia"], correctIndex: 0 },
+    { key: "gau4", question: "Australia's largest state by area?", choices: ["Queensland", "Western Australia", "New South Wales", "Victoria"], correctIndex: 1 },
+    { key: "gau5", question: "The First Fleet arrived in?", choices: ["1770", "1788", "1801", "1820"], correctIndex: 1 },
+    { key: "gau6", question: "Famous monolith in the Northern Territory?", choices: ["Uluru", "Kata Tjuta", "Mount Kosciuszko", "The Olgas"], correctIndex: 0 },
+    { key: "gau7", question: "Longest river in Australia?", choices: ["Darling", "Murray", "Murrumbidgee", "Swan"], correctIndex: 1 },
+    { key: "gau8", question: "Australia's national parliament sits in?", choices: ["Sydney", "Canberra", "Brisbane", "Adelaide"], correctIndex: 1 },
+    { key: "gau9", question: "Indigenous Australians are Aboriginal peoples and?", choices: ["Maori", "Torres Strait Islanders", "Polynesians", "Papuans"], correctIndex: 1 },
+    { key: "gau10", question: "Which city hosted the 2000 Summer Olympics?", choices: ["Melbourne", "Sydney", "Brisbane", "Perth"], correctIndex: 1 },
+  ],
+  Brazil: [
+    { key: "gbr1", question: "Brazil declared independence from Portugal in?", choices: ["1808", "1822", "1889", "1900"], correctIndex: 1 },
+    { key: "gbr2", question: "Capital of Brazil?", choices: ["Rio de Janeiro", "Brasília", "São Paulo", "Salvador"], correctIndex: 1 },
+    { key: "gbr3", question: "Official language of Brazil?", choices: ["Spanish", "Portuguese", "French", "Dutch"], correctIndex: 1 },
+    { key: "gbr4", question: "Brazil became a republic in?", choices: ["1822", "1850", "1889", "1930"], correctIndex: 2 },
+    { key: "gbr5", question: "Largest river by discharge in Brazil?", choices: ["Paraná", "Amazon", "São Francisco", "Tocantins"], correctIndex: 1 },
+    { key: "gbr6", question: "Brazil's currency?", choices: ["Peso", "Real", "Escudo", "Cruzeiro"], correctIndex: 1 },
+    { key: "gbr7", question: "Statue overlooking Rio de Janeiro?", choices: ["Christ the Redeemer", "El Ángel", "Cristo Rey", "Sugarloaf"], correctIndex: 0 },
+    { key: "gbr8", question: "How many FIFA World Cups has Brazil won?", choices: ["3", "4", "5", "6"], correctIndex: 2 },
+    { key: "gbr9", question: "Brazil is the largest country in which continent?", choices: ["Africa", "South America", "North America", "Asia"], correctIndex: 1 },
+    { key: "gbr10", question: "Rio de Janeiro hosted the Olympics in?", choices: ["2012", "2014", "2016", "2020"], correctIndex: 2 },
+  ],
+  Egypt: [
+    { key: "geg1", question: "The Great Pyramid was built for which pharaoh?", choices: ["Khafre", "Khufu", "Menkaure", "Tutankhamun"], correctIndex: 1 },
+    { key: "geg2", question: "The Suez Canal opened in?", choices: ["1859", "1869", "1889", "1914"], correctIndex: 1 },
+    { key: "geg3", question: "Longest river flowing through Egypt?", choices: ["Congo", "Nile", "Niger", "Zambezi"], correctIndex: 1 },
+    { key: "geg4", question: "Capital of Egypt?", choices: ["Alexandria", "Cairo", "Giza", "Luxor"], correctIndex: 1 },
+    { key: "geg5", question: "The Rosetta Stone helped decipher?", choices: ["Cuneiform", "Hieroglyphs", "Linear B", "Runes"], correctIndex: 1 },
+    { key: "geg6", question: "Egypt's Aswan High Dam was completed in?", choices: ["1956", "1970", "1981", "1990"], correctIndex: 1 },
+    { key: "geg7", question: "Which queen was the last pharaoh of Egypt?", choices: ["Nefertiti", "Cleopatra VII", "Hatshepsut", "Tiye"], correctIndex: 1 },
+    { key: "geg8", question: "Egypt's currency?", choices: ["Dinar", "Egyptian pound", "Riyal", "Dirham"], correctIndex: 1 },
+    { key: "geg9", question: "Valley of the Kings is near which city?", choices: ["Aswan", "Luxor", "Cairo", "Suez"], correctIndex: 1 },
+    { key: "geg10", question: "Egypt became a republic in?", choices: ["1922", "1953", "1961", "1971"], correctIndex: 1 },
+  ],
+  "South Africa": [
+    { key: "gza1", question: "Who became South Africa's first democratically elected president?", choices: ["Thabo Mbeki", "Nelson Mandela", "F. W. de Klerk", "Jacob Zuma"], correctIndex: 1 },
+    { key: "gza2", question: "Apartheid officially ended in?", choices: ["1976", "1990", "1994", "1999"], correctIndex: 2 },
+    { key: "gza3", question: "How many capital cities does South Africa have?", choices: ["1", "2", "3", "4"], correctIndex: 2 },
+    { key: "gza4", question: "The legislative capital of South Africa is?", choices: ["Pretoria", "Cape Town", "Bloemfontein", "Durban"], correctIndex: 1 },
+    { key: "gza5", question: "South Africa's currency?", choices: ["Rand", "Shilling", "Kwacha", "Pula"], correctIndex: 0 },
+    { key: "gza6", question: "How many official languages does South Africa recognise?", choices: ["9", "11", "12", "14"], correctIndex: 2 },
+    { key: "gza7", question: "Robben Island is famous as?", choices: ["A gold mine", "Mandela's prison", "A naval base", "A game reserve"], correctIndex: 1 },
+    { key: "gza8", question: "South Africa hosted the FIFA World Cup in?", choices: ["2006", "2010", "2014", "2018"], correctIndex: 1 },
+    { key: "gza9", question: "Which mountain overlooks Cape Town?", choices: ["Drakensberg", "Table Mountain", "Kilimanjaro", "Magaliesberg"], correctIndex: 1 },
+    { key: "gza10", question: "The Soweto Uprising happened in?", choices: ["1960", "1976", "1985", "1992"], correctIndex: 1 },
+  ],
+  Spain: [
+    { key: "ges1", question: "Capital of Spain?", choices: ["Barcelona", "Madrid", "Seville", "Valencia"], correctIndex: 1 },
+    { key: "ges2", question: "The Spanish Civil War ended in?", choices: ["1936", "1939", "1945", "1950"], correctIndex: 1 },
+    { key: "ges3", question: "Who sailed for Spain and reached the Americas in 1492?", choices: ["Magellan", "Christopher Columbus", "Cortés", "Pizarro"], correctIndex: 1 },
+    { key: "ges4", question: "Sagrada Família was designed by?", choices: ["Antoni Gaudí", "Picasso", "Calatrava", "Velázquez"], correctIndex: 0 },
+    { key: "ges5", question: "Spain's parliament is called the?", choices: ["Cortes Generales", "Duma", "Diet", "Senado Unico"], correctIndex: 0 },
+    { key: "ges6", question: "Which dictator ruled Spain until 1975?", choices: ["Primo de Rivera", "Francisco Franco", "Juan Carlos", "Azaña"], correctIndex: 1 },
+    { key: "ges7", question: "Islamic rule in Spain ended with the fall of?", choices: ["Toledo", "Granada", "Córdoba", "Seville"], correctIndex: 1 },
+    { key: "ges8", question: "Barcelona hosted the Summer Olympics in?", choices: ["1988", "1992", "1996", "2004"], correctIndex: 1 },
+    { key: "ges9", question: "Longest river in Spain?", choices: ["Ebro", "Tagus", "Douro", "Guadalquivir"], correctIndex: 1 },
+    { key: "ges10", question: "Spain joined the European Union in?", choices: ["1973", "1981", "1986", "1995"], correctIndex: 2 },
+  ],
+  Mexico: [
+    { key: "gmx1", question: "Mexico gained independence from Spain in?", choices: ["1810", "1821", "1848", "1910"], correctIndex: 1 },
+    { key: "gmx2", question: "The Mexican Revolution began in?", choices: ["1900", "1910", "1917", "1920"], correctIndex: 1 },
+    { key: "gmx3", question: "Which civilization built Chichén Itzá?", choices: ["Aztec", "Maya", "Olmec", "Inca"], correctIndex: 1 },
+    { key: "gmx4", question: "Capital of the Aztec Empire?", choices: ["Teotihuacan", "Tenochtitlan", "Tulum", "Palenque"], correctIndex: 1 },
+    { key: "gmx5", question: "Mexico's currency?", choices: ["Peso", "Real", "Quetzal", "Colón"], correctIndex: 0 },
+    { key: "gmx6", question: "Cinco de Mayo commemorates the Battle of?", choices: ["Puebla", "Veracruz", "Chapultepec", "Celaya"], correctIndex: 0 },
+    { key: "gmx7", question: "Mexico's most famous female painter?", choices: ["Frida Kahlo", "Remedios Varo", "María Izquierdo", "Leonora Carrington"], correctIndex: 0 },
+    { key: "gmx8", question: "Mexico City is built on the former lake of?", choices: ["Chapala", "Texcoco", "Pátzcuaro", "Catemaco"], correctIndex: 1 },
+    { key: "gmx9", question: "Mexico hosted the FIFA World Cup in 1970 and?", choices: ["1978", "1986", "1994", "2002"], correctIndex: 1 },
+    { key: "gmx10", question: "How many states does Mexico have?", choices: ["28", "31", "32", "34"], correctIndex: 2 },
+  ],
+  China: [
+    { key: "gcn1", question: "The People's Republic of China was founded in?", choices: ["1911", "1937", "1949", "1959"], correctIndex: 2 },
+    { key: "gcn2", question: "Longest river in China?", choices: ["Yellow River", "Yangtze", "Pearl River", "Mekong"], correctIndex: 1 },
+    { key: "gcn3", question: "Which dynasty first unified China in 221 BC?", choices: ["Han", "Qin", "Tang", "Ming"], correctIndex: 1 },
+    { key: "gcn4", question: "China's currency is the?", choices: ["Yen", "Renminbi (Yuan)", "Won", "Baht"], correctIndex: 1 },
+    { key: "gcn5", question: "The Terracotta Army was discovered near?", choices: ["Beijing", "Xi'an", "Nanjing", "Chengdu"], correctIndex: 1 },
+    { key: "gcn6", question: "Beijing hosted the Summer Olympics in?", choices: ["2004", "2008", "2012", "2016"], correctIndex: 1 },
+    { key: "gcn7", question: "The Silk Road connected China with?", choices: ["Australia", "Europe", "Antarctica", "Brazil"], correctIndex: 1 },
+    { key: "gcn8", question: "Hong Kong returned to Chinese sovereignty in?", choices: ["1984", "1997", "1999", "2003"], correctIndex: 1 },
+    { key: "gcn9", question: "The Forbidden City is located in?", choices: ["Shanghai", "Beijing", "Xi'an", "Harbin"], correctIndex: 1 },
+    { key: "gcn10", question: "Which dam on the Yangtze is the world's largest by capacity?", choices: ["Gezhouba", "Three Gorges", "Xiluodu", "Longtan"], correctIndex: 1 },
+  ],
+  Nigeria: [
+    { key: "gng1", question: "Nigeria gained independence in?", choices: ["1957", "1960", "1963", "1970"], correctIndex: 1 },
+    { key: "gng2", question: "Capital of Nigeria?", choices: ["Lagos", "Abuja", "Kano", "Ibadan"], correctIndex: 1 },
+    { key: "gng3", question: "Nigeria's currency?", choices: ["Cedi", "Naira", "Shilling", "Franc"], correctIndex: 1 },
+    { key: "gng4", question: "Major river flowing through Nigeria?", choices: ["Niger", "Congo", "Nile", "Volta"], correctIndex: 0 },
+    { key: "gng5", question: "The Nigerian Civil War (Biafra) began in?", choices: ["1960", "1967", "1970", "1975"], correctIndex: 1 },
+    { key: "gng6", question: "Nigeria's largest city by population?", choices: ["Abuja", "Lagos", "Port Harcourt", "Enugu"], correctIndex: 1 },
+    { key: "gng7", question: "How many states does Nigeria have?", choices: ["30", "34", "36", "38"], correctIndex: 2 },
+    { key: "gng8", question: "Nigeria's main export commodity?", choices: ["Cocoa", "Crude oil", "Gold", "Coffee"], correctIndex: 1 },
+    { key: "gng9", question: "Which are Nigeria's three largest ethnic groups?", choices: ["Hausa, Yoruba, Igbo", "Zulu, Xhosa, Sotho", "Akan, Ewe, Ga", "Kikuyu, Luo, Luhya"], correctIndex: 0 },
+    { key: "gng10", question: "Nigeria became a federal republic in?", choices: ["1960", "1963", "1979", "1999"], correctIndex: 1 },
+  ],
+  Argentina: [
+    { key: "gar1", question: "Argentina declared independence in?", choices: ["1810", "1816", "1853", "1880"], correctIndex: 1 },
+    { key: "gar2", question: "Capital of Argentina?", choices: ["Córdoba", "Buenos Aires", "Rosario", "Mendoza"], correctIndex: 1 },
+    { key: "gar3", question: "Highest peak in the Americas, located in Argentina?", choices: ["Aconcagua", "Ojos del Salado", "Chimborazo", "Illimani"], correctIndex: 0 },
+    { key: "gar4", question: "Who led Argentina's independence campaigns across the Andes?", choices: ["Simón Bolívar", "José de San Martín", "Belgrano", "Rosas"], correctIndex: 1 },
+    { key: "gar5", question: "Argentina's currency?", choices: ["Peso", "Real", "Sol", "Boliviano"], correctIndex: 0 },
+    { key: "gar6", question: "The Falklands/Malvinas conflict occurred in?", choices: ["1976", "1982", "1985", "1990"], correctIndex: 1 },
+    { key: "gar7", question: "Vast fertile plains of Argentina are called?", choices: ["Pampas", "Llanos", "Cerrado", "Altiplano"], correctIndex: 0 },
+    { key: "gar8", question: "Argentina won the FIFA World Cup most recently in?", choices: ["1986", "2014", "2018", "2022"], correctIndex: 3 },
+    { key: "gar9", question: "Iguazú Falls sit on Argentina's border with?", choices: ["Chile", "Brazil", "Bolivia", "Uruguay"], correctIndex: 1 },
+    { key: "gar10", question: "Which first lady was known as Evita?", choices: ["Eva Perón", "Isabel Perón", "Cristina Kirchner", "Amalia Fortabat"], correctIndex: 0 },
+  ],
+  "United Arab Emirates": [
+    { key: "gae1", question: "The UAE was formed in which year?", choices: ["1961", "1971", "1981", "1991"], correctIndex: 1 },
+    { key: "gae2", question: "Capital of the UAE?", choices: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman"], correctIndex: 1 },
+    { key: "gae3", question: "How many emirates make up the UAE?", choices: ["5", "6", "7", "8"], correctIndex: 2 },
+    { key: "gae4", question: "The world's tallest building is in?", choices: ["Abu Dhabi", "Dubai", "Doha", "Riyadh"], correctIndex: 1 },
+    { key: "gae5", question: "UAE's currency?", choices: ["Riyal", "Dirham", "Dinar", "Rial"], correctIndex: 1 },
+    { key: "gae6", question: "Who was the UAE's founding president?", choices: ["Sheikh Zayed bin Sultan Al Nahyan", "Sheikh Rashid", "Sheikh Khalifa", "Sheikh Mohammed"], correctIndex: 0 },
+    { key: "gae7", question: "Dubai hosted which global event in 2021-22?", choices: ["Olympics", "Expo 2020", "World Cup", "G20"], correctIndex: 1 },
+    { key: "gae8", question: "The UAE lies on which gulf?", choices: ["Gulf of Aden", "Persian (Arabian) Gulf", "Gulf of Oman only", "Red Sea"], correctIndex: 1 },
+    { key: "gae9", question: "The UAE's Mars mission probe was named?", choices: ["Hope", "Amal-2", "Falcon", "Zayed"], correctIndex: 0 },
+    { key: "gae10", question: "Largest emirate by area?", choices: ["Dubai", "Abu Dhabi", "Sharjah", "Fujairah"], correctIndex: 1 },
+  ],
+  Indonesia: [
+    { key: "gid1", question: "Indonesia declared independence in?", choices: ["1942", "1945", "1949", "1955"], correctIndex: 1 },
+    { key: "gid2", question: "Capital of Indonesia (as of 2026 officially relocating to)?", choices: ["Jakarta", "Nusantara", "Surabaya", "Bandung"], correctIndex: 1 },
+    { key: "gid3", question: "Indonesia's first president?", choices: ["Suharto", "Sukarno", "Habibie", "Megawati"], correctIndex: 1 },
+    { key: "gid4", question: "Indonesia's currency?", choices: ["Ringgit", "Rupiah", "Baht", "Peso"], correctIndex: 1 },
+    { key: "gid5", question: "Borobudur temple is located on which island?", choices: ["Bali", "Java", "Sumatra", "Sulawesi"], correctIndex: 1 },
+    { key: "gid6", question: "Indonesia is the world's largest country by number of?", choices: ["Deserts", "Islands", "Lakes", "Volcanic craters only"], correctIndex: 1 },
+    { key: "gid7", question: "The 1883 eruption of which volcano was catastrophic?", choices: ["Merapi", "Krakatoa", "Tambora", "Bromo"], correctIndex: 1 },
+    { key: "gid8", question: "Indonesia's national motto means?", choices: ["Unity in Diversity", "Order and Progress", "Liberty Always", "Faith and Work"], correctIndex: 0 },
+    { key: "gid9", question: "Official language of Indonesia?", choices: ["Javanese", "Bahasa Indonesia", "Malay-Dutch", "Sundanese"], correctIndex: 1 },
+    { key: "gid10", question: "Komodo dragons are native to which country?", choices: ["Philippines", "Indonesia", "Malaysia", "Thailand"], correctIndex: 1 },
+  ],
+  "Saudi Arabia": [
+    { key: "gsa1", question: "The modern Kingdom of Saudi Arabia was founded in?", choices: ["1902", "1932", "1945", "1960"], correctIndex: 1 },
+    { key: "gsa2", question: "Capital of Saudi Arabia?", choices: ["Jeddah", "Riyadh", "Mecca", "Dammam"], correctIndex: 1 },
+    { key: "gsa3", question: "Who founded the modern Saudi state?", choices: ["King Faisal", "Ibn Saud (Abdulaziz)", "King Fahd", "King Saud"], correctIndex: 1 },
+    { key: "gsa4", question: "Saudi Arabia's currency?", choices: ["Dirham", "Riyal", "Dinar", "Pound"], correctIndex: 1 },
+    { key: "gsa5", question: "The annual Hajj pilgrimage takes place in?", choices: ["Medina", "Mecca", "Riyadh", "Taif"], correctIndex: 1 },
+    { key: "gsa6", question: "Saudi Arabia's national development plan is called?", choices: ["Vision 2030", "Plan 2040", "Horizon 2025", "Future Gulf"], correctIndex: 0 },
+    { key: "gsa7", question: "Saudi Arabia is the world's leading exporter of?", choices: ["Gold", "Crude oil", "Wheat", "Copper"], correctIndex: 1 },
+    { key: "gsa8", question: "The vast desert covering southern Saudi Arabia?", choices: ["Sahara", "Rub' al Khali", "Gobi", "Kalahari"], correctIndex: 1 },
+    { key: "gsa9", question: "Which sea borders Saudi Arabia to the west?", choices: ["Red Sea", "Caspian Sea", "Black Sea", "Arabian Sea"], correctIndex: 0 },
+    { key: "gsa10", question: "OPEC, which Saudi Arabia co-founded, was created in?", choices: ["1950", "1960", "1973", "1980"], correctIndex: 1 },
   ],
 };
 
@@ -147,10 +409,14 @@ export function getRegionalMovies(region: Region): Question[] {
 }
 
 export function getGKWorld(): Question[] {
-  return gkWorld.map((m, i) => toQ(m, "GK World", i));
+  return gkWorld.map((m, i) => toQ(m, "GK", i));
 }
 
+/**
+ * Regional GK for the selected country. Countries without a bespoke pool fall
+ * back to a solid default set so the screen is never empty.
+ */
 export function getGKRegional(region: Region): Question[] {
-  const list = gkRegional[region] ?? gkRegional.Global;
-  return list.map((m, i) => toQ(m, "GK Regional", i));
+  const list = gkByCountry[region] ?? gkWorld;
+  return list.map((m, i) => toQ(m, "GK", i));
 }
