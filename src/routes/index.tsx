@@ -15,9 +15,10 @@ import {
   readStorage,
   setFavoriteFandom,
   setRegion,
+  setGkScope,
   type QuizStorage,
 } from "@/lib/quiz-storage";
-import { REGIONS, type Region } from "@/lib/regional-content";
+import { COUNTRIES, flagFor, type Region } from "@/lib/regional-content";
 import {
   BgGlow,
   FullBleed,
@@ -94,6 +95,7 @@ function LandingContainer() {
       storage={storage}
       onFandomChange={(f) => setStorage(setFavoriteFandom(f))}
       onRegionChange={(r) => setStorage(setRegion(r))}
+      onGkScopeChange={(s) => setStorage(setGkScope(s))}
       streak={getCurrentStreak(storage)}
       playedToday={hasPlayedToday(storage)}
     />
@@ -105,6 +107,7 @@ function Landing({
   storage,
   onFandomChange,
   onRegionChange,
+  onGkScopeChange,
   streak,
   playedToday,
 }: {
@@ -112,12 +115,14 @@ function Landing({
   storage: QuizStorage;
   onFandomChange: (f: string | null) => void;
   onRegionChange: (r: Region) => void;
+  onGkScopeChange: (s: "global" | "regional") => void;
   streak: number;
   playedToday: boolean;
 }) {
   const level = getLevelInfo(storage.xp);
   const activeFandom = storage.favoriteFandom ?? "All Fandoms";
   const activeRegion = (storage.region as Region) ?? "Global";
+  const gkScope = storage.gkScope ?? "global";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -164,9 +169,18 @@ function Landing({
           </p>
         </section>
 
-        <FandomHub active={activeFandom} onChange={onFandomChange} />
+        <FandomHub
+          active={activeFandom}
+          onChange={onFandomChange}
+          region={activeRegion}
+          onRegionChange={onRegionChange}
+          gkScope={gkScope}
+          onGkScopeChange={onGkScopeChange}
+        />
 
-        <RegionSelector active={activeRegion} onChange={onRegionChange} />
+        {activeFandom !== "GK" && (
+          <RegionSelector active={activeRegion} onChange={onRegionChange} />
+        )}
 
         {playedToday && <NextQuestCountdown />}
 
@@ -304,9 +318,17 @@ function ProfileCard({
 function FandomHub({
   active,
   onChange,
+  region,
+  onRegionChange,
+  gkScope,
+  onGkScopeChange,
 }: {
   active: string;
   onChange: (f: string | null) => void;
+  region: Region;
+  onRegionChange: (r: Region) => void;
+  gkScope: "global" | "regional";
+  onGkScopeChange: (s: "global" | "regional") => void;
 }) {
   return (
     <section className="mt-12">
@@ -338,6 +360,63 @@ function FandomHub({
           );
         })}
       </div>
+
+      {active === "GK" && (
+        <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="flex gap-2">
+            {(
+              [
+                { key: "global", label: "🌐 Global GK" },
+                { key: "regional", label: "📍 Regional GK" },
+              ] as const
+            ).map((opt) => {
+              const on = gkScope === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => onGkScopeChange(opt.key)}
+                  className={`flex-1 rounded-2xl border px-4 py-3 font-display text-sm transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                    on
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                  }`}
+                  style={
+                    on
+                      ? { boxShadow: "0 0 22px -8px oklch(0.55 0.22 305 / 0.7)" }
+                      : undefined
+                  }
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {gkScope === "regional" && (
+            <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-300">
+              <label
+                htmlFor="gk-country"
+                className="font-display text-xs uppercase tracking-[0.2em] text-accent"
+              >
+                Select Your Country/Region
+              </label>
+              <CountrySelect
+                id="gk-country"
+                value={region === "Global" ? "India" : region}
+                onChange={onRegionChange}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                {flagFor(region)} Exam-style history, geography and civics for{" "}
+                <span className="text-primary">
+                  {region === "Global" ? "India" : region}
+                </span>
+                .
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <Link
         to="/practice"
         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary/15 border border-primary/40 px-5 py-3.5 font-display text-base text-primary transition-all hover:bg-primary/25"
@@ -346,6 +425,35 @@ function FandomHub({
         Start {active} Quest
       </Link>
     </section>
+  );
+}
+
+function CountrySelect({
+  id,
+  value,
+  onChange,
+  includeGlobal,
+}: {
+  id?: string;
+  value: string;
+  onChange: (r: Region) => void;
+  includeGlobal?: boolean;
+}) {
+  return (
+    <select
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="mt-2 w-full appearance-none rounded-2xl border border-accent/40 bg-card px-4 py-3 font-display text-sm text-foreground outline-none transition-all focus:border-accent"
+      style={{ boxShadow: "0 0 22px -12px oklch(0.55 0.22 305 / 0.8)" }}
+    >
+      {includeGlobal && <option value="Global">🌐 Global</option>}
+      {COUNTRIES.map((c) => (
+        <option key={c.name} value={c.name}>
+          {c.flag} {c.name}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -360,7 +468,7 @@ function RegionSelector({
     <section className="mt-8">
       <div className="flex items-baseline justify-between">
         <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
-          Select Your Region
+          Select Your Country/Region
         </p>
         <span className="text-xs text-muted-foreground">
           Tailors Movies &amp; GK
@@ -369,29 +477,7 @@ function RegionSelector({
       <h2 className="font-display mt-2 text-2xl text-foreground">
         Play from your part of the world.
       </h2>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {REGIONS.map((r) => {
-          const isActive = active === r;
-          return (
-            <button
-              key={r}
-              onClick={() => onChange(r)}
-              className={`rounded-full border px-4 py-2 font-display text-xs uppercase tracking-wider transition-all ${
-                isActive
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground"
-              }`}
-              style={
-                isActive
-                  ? { boxShadow: "0 0 20px -8px oklch(0.55 0.22 305 / 0.6)" }
-                  : undefined
-              }
-            >
-              {r}
-            </button>
-          );
-        })}
-      </div>
+      <CountrySelect value={active} onChange={onChange} includeGlobal />
     </section>
   );
 }
