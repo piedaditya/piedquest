@@ -391,6 +391,12 @@ function PracticePlay({
           </span>
         </div>
 
+        {aiError && (
+          <p className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            {aiError} — playing from the offline pool.
+          </p>
+        )}
+
         <div className="mt-6 flex gap-1.5">
           {questions.map((_, i) => (
             <div
@@ -435,6 +441,11 @@ function PracticePlay({
           {q.category && (
             <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
               {q.category}
+              {q.aiGenerated && (
+                <span className="ml-2 inline-flex items-center gap-1 text-primary">
+                  <Sparkles className="h-3 w-3" /> AI
+                </span>
+              )}
             </p>
           )}
           <h2 className="font-display mt-3 text-3xl leading-tight text-foreground sm:text-4xl">
@@ -482,6 +493,18 @@ function PracticePlay({
               );
             })}
           </div>
+
+          {locked && q.explanation && (
+            <div
+              className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3"
+              style={{ boxShadow: "0 0 30px -18px var(--primary)" }}
+            >
+              <p className="font-display text-[10px] uppercase tracking-[0.25em] text-primary">
+                Why
+              </p>
+              <p className="mt-1 text-sm text-foreground">{q.explanation}</p>
+            </div>
+          )}
         </div>
 
         <Link
