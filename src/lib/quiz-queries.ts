@@ -18,6 +18,8 @@ export interface Question {
   choices: string[];
   correctIndex: number;
   category: string | null;
+  explanation?: string;
+  aiGenerated?: boolean;
 }
 
 export interface DailyQuiz {
