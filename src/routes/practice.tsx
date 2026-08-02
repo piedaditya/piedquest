@@ -1,11 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Home, Infinity as InfinityIcon, RefreshCw, RotateCcw, Zap } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  ArrowUpRight,
+  Home,
+  Infinity as InfinityIcon,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import {
   practicePoolQueryOptions,
   type Question,
 } from "@/lib/quiz-queries";
+import { generateAiQuestions } from "@/lib/ai-questions.functions";
+import { getAskedQuestions, rememberAskedQuestions } from "@/lib/ai-session";
 import {
   getLevelInfo,
   readStorage,
@@ -73,9 +84,86 @@ function PracticeContainer({
   );
   const [round, setRound] = useState(0);
   const [justExhausted, setJustExhausted] = useState(false);
+  const [aiQuestions, setAiQuestions] = useState<Question[] | null>(null);
+  const [aiLoading, setAiLoading] = useState(true);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const generate = useServerFn(generateAiQuestions);
+
+  const category = fandom ?? "All Fandoms";
+  const aiCategory =
+    category === "GK"
+      ? gkScope === "regional"
+        ? "General Knowledge, history, geography and competitive-exam facts"
+        : "world general knowledge"
+      : category === "All Fandoms"
+        ? "globally famous pop culture, movies, gaming and music"
+        : category;
+  const aiRegion =
+    category === "GK" && gkScope === "regional"
+      ? region === "Global"
+        ? "India"
+        : region
+      : category === "Movies"
+        ? region
+        : "Global";
+
+  const loadAi = useCallback(async () => {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const { questions } = await generate({
+        data: {
+          category: aiCategory,
+          region: aiRegion,
+          count: 5,
+          asked: getAskedQuestions(),
+        },
+      });
+      if (!questions.length) throw new Error("empty");
+      rememberAskedQuestions(questions.map((q) => q.question));
+      setAiQuestions(
+        questions.map((q, i) => ({
+          id: `ai-${Date.now()}-${i}`,
+          quizNumber: 0,
+          order: i,
+          question: q.question,
+          choices: q.choices,
+          correctIndex: q.correctIndex,
+          category,
+          explanation: q.explanation,
+          aiGenerated: true,
+        })),
+      );
+    } catch (error) {
+      setAiQuestions(null);
+      setAiError(error instanceof Error ? error.message : "AI generation failed");
+    } finally {
+      setAiLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiCategory, aiRegion, category, round]);
+
+  useEffect(() => {
+    void loadAi();
+  }, [loadAi]);
 
   const bucket = `${bucketFor(fandom)}::${region}::${gkScope}`;
   const { questions, exhausted, reviewId } = useMemo(() => {
+    if (aiQuestions?.length) {
+      // AI rounds are always fresh; still weave in one previously-missed
+      // question from the local pool when one is available.
+      const pool = data ?? [];
+      const review = pickReviewQuestion(pool, new Set<string>());
+      let picks = aiQuestions;
+      let reviewId: string | null = null;
+      if (review) {
+        const slot = Math.floor(Math.random() * picks.length);
+        picks = [...picks];
+        picks[slot] = review;
+        reviewId = review.id;
+      }
+      return { questions: picks, exhausted: false, reviewId };
+    }
     const pool = data ?? [];
     const seen = getSeen(bucket);
     const { picks, exhausted } = drawFreshRound(pool, seen, 5);
@@ -93,11 +181,15 @@ function PracticeContainer({
     }
     return { questions, exhausted, reviewId };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, round, bucket]);
+  }, [data, round, bucket, aiQuestions]);
 
   useEffect(() => {
     setJustExhausted(exhausted);
   }, [exhausted, round]);
+
+  if (aiLoading) {
+    return <AiGeneratingScreen category={category} />;
+  }
 
   if (!questions.length) {
     return (
@@ -126,14 +218,53 @@ function PracticeContainer({
       reviewId={reviewId}
       storage={storage}
       exhaustedNotice={justExhausted}
+      aiError={aiError}
       onFinish={(correct) => {
         markSeen(bucket, questions.map((q) => q.id));
         if (exhausted) resetSeen(bucket);
         recordPractice(correct);
         onXpEarned();
       }}
-      onReplay={() => setRound((r) => r + 1)}
+      onReplay={() => {
+        setAiQuestions(null);
+        setRound((r) => r + 1);
+      }}
     />
+  );
+}
+
+function AiGeneratingScreen({ category }: { category: string }) {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <BgGlow />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-xl flex-col px-5 pb-10 pt-8">
+        <Logo />
+        <div className="mt-16 flex flex-col items-center text-center">
+          <span
+            className="inline-flex animate-pulse items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 font-display text-xs uppercase tracking-[0.25em] text-accent"
+            style={{ boxShadow: "0 0 32px -8px oklch(0.55 0.22 305 / 0.8)" }}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            AI is forging your quest
+          </span>
+          <h2 className="font-display mt-6 text-4xl leading-tight text-foreground">
+            Summoning fresh {category} mysteries…
+          </h2>
+        </div>
+        <div className="mt-12 space-y-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-16 animate-pulse rounded-2xl border border-primary/25 bg-primary/5"
+              style={{
+                animationDelay: `${i * 140}ms`,
+                boxShadow: "0 0 28px -14px var(--primary)",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -145,6 +276,7 @@ function PracticePlay({
   onFinish,
   onReplay,
   exhaustedNotice,
+  aiError,
 }: {
   questions: Question[];
   fandom: string;
@@ -153,6 +285,7 @@ function PracticePlay({
   onFinish: (correct: number) => void;
   onReplay: () => void;
   exhaustedNotice?: boolean;
+  aiError?: string | null;
 }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -194,7 +327,7 @@ function PracticePlay({
           setVisible(true);
         }
       }, 250);
-    }, 800);
+    }, q.explanation ? 2600 : 800);
   };
 
   if (done) {
