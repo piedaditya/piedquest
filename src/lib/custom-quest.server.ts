@@ -1,0 +1,127 @@
+// Server-only generator for "My Own Quests" — builds a bespoke 5-question
+// quiz for any topic via the Lovable AI Gateway.
+export type Difficulty = "Easy" | "Normal" | "Hard" | "Extreme";
+export type AnswerMode = "mcq" | "typing";
+
+export interface GeneratedQuestion {
+  question: string;
+  choices: string[];
+  correctIndex: number;
+  answerText: string;
+  acceptable: string[];
+  explanation: string;
+}
+
+const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "google/gemini-3.6-flash";
+
+const DIFFICULTY_HINT: Record<Difficulty, string> = {
+  Easy: "simple one-line questions a beginner can answer",
+  Normal: "standard general knowledge on the topic",
+  Hard: "deep lore / technical knowledge that only enthusiasts know",
+  Extreme: "highly obscure, competitive-exam level questions that stump experts",
+};
+
+export function buildQuestPrompt(args: {
+  topic: string;
+  difficulty: Difficulty;
+  mode: AnswerMode;
+  count: number;
+}): string {
+  const modeLine =
+    args.mode === "typing"
+      ? `Answers will be TYPED by the user, so "correct_answer" must be a short word or phrase (1-4 words, no punctuation). Also give "acceptable_answers": an array of 2-4 alternative spellings/abbreviations that should count as correct.`
+      : `Provide exactly 4 plausible options, only one correct.`;
+
+  return `Create ${args.count} original multiple-choice trivia questions about: "${args.topic}".
+Difficulty: ${args.difficulty} — ${DIFFICULTY_HINT[args.difficulty]}.
+${modeLine}
+Every question must be factually accurate and include a short, educational explanation (1-2 sentences).
+
+Return ONLY JSON in this exact shape:
+{"questions":[{"question_text":"...","options":["a","b","c","d"],"correct_answer":"exact text of the correct option","acceptable_answers":["..."],"explanation":"..."}]}`;
+}
+
+export function parseQuest(raw: string): GeneratedQuestion[] {
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start === -1 || end === -1) return [];
+  let payload: unknown;
+  try {
+    payload = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return [];
+  }
+  const list = (payload as { questions?: unknown })?.questions;
+  if (!Array.isArray(list)) return [];
+
+  const out: GeneratedQuestion[] = [];
+  for (const item of list) {
+    const q = item as Record<string, unknown>;
+    const question = typeof q["question_text"] === "string" ? q["question_text"] : "";
+    const options = Array.isArray(q["options"])
+      ? (q["options"] as unknown[]).filter((o): o is string => typeof o === "string")
+      : [];
+    const answer = typeof q["correct_answer"] === "string" ? q["correct_answer"] : "";
+    const explanation = typeof q["explanation"] === "string" ? q["explanation"] : "";
+    const acceptable = Array.isArray(q["acceptable_answers"])
+      ? (q["acceptable_answers"] as unknown[]).filter((o): o is string => typeof o === "string")
+      : [];
+    if (!question || !answer) continue;
+    const choices = options.length === 4 ? options : [];
+    let correctIndex = choices.findIndex(
+      (o) => o.trim().toLowerCase() === answer.trim().toLowerCase(),
+    );
+    if (choices.length === 4 && correctIndex < 0) correctIndex = 0;
+    out.push({
+      question,
+      choices,
+      correctIndex: correctIndex < 0 ? 0 : correctIndex,
+      answerText: choices[correctIndex] ?? answer,
+      acceptable: Array.from(new Set([answer, ...acceptable])),
+      explanation,
+    });
+  }
+  return out;
+}
+
+export async function generateCustomQuest(args: {
+  topic: string;
+  difficulty: Difficulty;
+  mode: AnswerMode;
+  count: number;
+}): Promise<GeneratedQuestion[]> {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("AI is not configured");
+
+  const response = await fetch(GATEWAY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
+    body: JSON.stringify({
+      model: MODEL,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a master quiz designer. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, original and never trivially guessable.",
+        },
+        { role: "user", content: buildQuestPrompt(args) },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    if (response.status === 429)
+      throw new Error("AI is busy right now — try again in a moment.");
+    if (response.status === 402)
+      throw new Error("AI credits exhausted. Add credits to keep forging quests.");
+    throw new Error(`AI request failed [${response.status}]: ${body.slice(0, 300)}`);
+  }
+
+  const data = (await response.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return parseQuest(data.choices?.[0]?.message?.content ?? "");
+}

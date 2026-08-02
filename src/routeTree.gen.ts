@@ -14,6 +14,7 @@ import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiDoubtChatRouteImport } from './routes/api/doubt-chat'
 
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDoubtChatRoute = ApiDoubtChatRouteImport.update({
+  id: '/api/doubt-chat',
+  path: '/api/doubt-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/api/doubt-chat': typeof ApiDoubtChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/practice': typeof PracticeRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/api/doubt-chat': typeof ApiDoubtChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/api/doubt-chat': typeof ApiDoubtChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/leaderboard' | '/practice' | '/quiz' | '/results'
+  fullPaths:
+    | '/'
+    | '/leaderboard'
+    | '/practice'
+    | '/quiz'
+    | '/results'
+    | '/api/doubt-chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/leaderboard' | '/practice' | '/quiz' | '/results'
-  id: '__root__' | '/' | '/leaderboard' | '/practice' | '/quiz' | '/results'
+  to:
+    | '/'
+    | '/leaderboard'
+    | '/practice'
+    | '/quiz'
+    | '/results'
+    | '/api/doubt-chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/leaderboard'
+    | '/practice'
+    | '/quiz'
+    | '/results'
+    | '/api/doubt-chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   PracticeRoute: typeof PracticeRoute
   QuizRoute: typeof QuizRoute
   ResultsRoute: typeof ResultsRoute
+  ApiDoubtChatRoute: typeof ApiDoubtChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/doubt-chat': {
+      id: '/api/doubt-chat'
+      path: '/api/doubt-chat'
+      fullPath: '/api/doubt-chat'
+      preLoaderRoute: typeof ApiDoubtChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   PracticeRoute: PracticeRoute,
   QuizRoute: QuizRoute,
   ResultsRoute: ResultsRoute,
+  ApiDoubtChatRoute: ApiDoubtChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
