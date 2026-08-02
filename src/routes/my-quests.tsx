@@ -1,0 +1,610 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  ArrowUpRight,
+  Check,
+  Clock,
+  Home,
+  Keyboard,
+  ListChecks,
+  RefreshCw,
+  Sparkles,
+  Wand2,
+  X,
+  Zap,
+} from "lucide-react";
+import { generateMyQuest } from "@/lib/custom-quest.functions";
+import type {
+  AnswerMode,
+  Difficulty,
+  GeneratedQuestion,
+} from "@/lib/custom-quest.server";
+import { isFuzzyMatch } from "@/lib/fuzzy-match";
+import { getLevelInfo, readStorage, recordPractice } from "@/lib/quiz-storage";
+import { BgGlow, FullBleed, Logo } from "@/lib/quest-ui";
+
+const DIFFICULTIES: { key: Difficulty; blurb: string }[] = [
+  { key: "Easy", blurb: "One-line, simple" },
+  { key: "Normal", blurb: "Standard knowledge" },
+  { key: "Hard", blurb: "Deep lore / technical" },
+  { key: "Extreme", blurb: "Competitive-level" },
+];
+
+const TIMERS = [
+  { value: 30, label: "30 seconds" },
+  { value: 60, label: "60 seconds" },
+  { value: 120, label: "120 seconds" },
+  { value: 0, label: "No timer" },
+];
+
+const SUGGESTIONS = [
+  "GTA V lore",
+  "Class 12 Biology — Sexual Reproduction in Flowering Plants",
+  "Basic Python coding",
+  "Formula 1 history",
+];
+
+export const Route = createFileRoute("/my-quests")({
+  component: MyQuestsRoute,
+  head: () => ({
+    meta: [
+      { title: "My Own Quests | Piedquest AI Quiz Generator" },
+      {
+        name: "description",
+        content:
+          "Build a custom AI quiz on any topic with Piedquest — pick your difficulty, timer and answer mode, then let the AI forge 5 fresh questions instantly.",
+      },
+      { property: "og:title", content: "My Own Quests | Piedquest AI Quiz Generator" },
+      {
+        property: "og:description",
+        content:
+          "Type any topic, choose difficulty, timer and typing or multiple-choice mode, and Piedquest AI forges a custom 5-question quest.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  errorComponent: ({ error }) => (
+    <FullBleed>
+      <div className="max-w-md text-center">
+        <h2 className="font-display text-3xl">My Own Quests didn't load</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    </FullBleed>
+  ),
+});
+
+type Phase = "config" | "loading" | "play";
+
+function MyQuestsRoute() {
+  const [phase, setPhase] = useState<Phase>("config");
+  const [topic, setTopic] = useState("");
+  const [difficulty, setDifficulty] = useState<Difficulty>("Normal");
+  const [seconds, setSeconds] = useState(60);
+  const [mode, setMode] = useState<AnswerMode>("mcq");
+  const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const generate = useServerFn(generateMyQuest);
+
+  const launch = async () => {
+    const clean = topic.trim();
+    if (clean.length < 2) {
+      setError("Give your quest a topic first.");
+      return;
+    }
+    setError(null);
+    setPhase("loading");
+    try {
+      const { questions: q } = await generate({
+        data: { topic: clean, difficulty, mode, count: 5 },
+      });
+      if (!q.length) throw new Error("The AI returned no questions — try rephrasing your topic.");
+      const usable = mode === "mcq" ? q.filter((x) => x.choices.length === 4) : q;
+      if (!usable.length) throw new Error("The AI returned no usable questions — try again.");
+      setQuestions(usable);
+      setPhase("play");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Generation failed");
+      setPhase("config");
+    }
+  };
+
+  if (phase === "loading") return <BoomLoader topic={topic} difficulty={difficulty} />;
+
+  if (phase === "play")
+    return (
+      <QuestPlayer
+        questions={questions}
+        mode={mode}
+        seconds={seconds}
+        topic={topic.trim()}
+        onExit={() => setPhase("config")}
+        onReplay={() => void launch()}
+      />
+    );
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <BgGlow />
+      <div className="relative z-10 mx-auto max-w-xl px-5 pb-16 pt-8">
+        <div className="flex items-center justify-between">
+          <Logo />
+          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
+            Home
+          </Link>
+        </div>
+
+        <div className="mt-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 font-display text-[11px] uppercase tracking-[0.25em] text-accent">
+            <Wand2 className="h-3.5 w-3.5" /> My Own Quests
+          </span>
+          <h1 className="font-display mt-5 text-4xl leading-[1.05] text-foreground sm:text-5xl">
+            Command the AI. <span className="text-primary">Forge any quiz.</span>
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Anything from game lore to your Class 12 Biology chapter — tuned to your
+            difficulty, timer and answer style.
+          </p>
+        </div>
+
+        {/* Topic */}
+        <Section label="Topic" icon={<Sparkles className="h-3.5 w-3.5" />}>
+          <input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            maxLength={200}
+            placeholder="e.g. GTA V lore, Python basics, Mughal Empire…"
+            className="w-full rounded-2xl border border-border bg-card px-4 py-4 text-base text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/60"
+            style={{ boxShadow: "0 0 40px -24px var(--primary)" }}
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setTopic(s)}
+                className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-all hover:border-primary/50 hover:text-foreground"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </Section>
+
+        {/* Difficulty */}
+        <Section label="Difficulty" icon={<Zap className="h-3.5 w-3.5" />}>
+          <div className="grid grid-cols-2 gap-3">
+            {DIFFICULTIES.map((d) => {
+              const active = difficulty === d.key;
+              return (
+                <button
+                  key={d.key}
+                  onClick={() => setDifficulty(d.key)}
+                  className={`rounded-2xl border p-4 text-left transition-all ${
+                    active
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:border-primary/40"
+                  }`}
+                  style={active ? { boxShadow: "0 0 34px -14px var(--primary)" } : undefined}
+                >
+                  <p className={`font-display text-base ${active ? "text-primary" : "text-foreground"}`}>
+                    {d.key}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{d.blurb}</p>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        {/* Timer */}
+        <Section label="Time per question" icon={<Clock className="h-3.5 w-3.5" />}>
+          <div className="relative">
+            <select
+              value={seconds}
+              onChange={(e) => setSeconds(Number(e.target.value))}
+              className="w-full appearance-none rounded-2xl border border-border bg-card px-4 py-4 font-display text-base text-foreground outline-none focus:border-accent/60"
+            >
+              {TIMERS.map((t) => (
+                <option key={t.value} value={t.value} className="bg-card">
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            <ArrowUpRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-135 text-accent" />
+          </div>
+        </Section>
+
+        {/* Answer mode */}
+        <Section label="Answer mode" icon={<ListChecks className="h-3.5 w-3.5" />}>
+          <div className="grid grid-cols-2 gap-3">
+            <ModeCard
+              active={mode === "mcq"}
+              onClick={() => setMode("mcq")}
+              icon={<ListChecks className="h-4 w-4" />}
+              title="Multiple Choice"
+              blurb="Classic 4 options"
+            />
+            <ModeCard
+              active={mode === "typing"}
+              onClick={() => setMode("typing")}
+              icon={<Keyboard className="h-4 w-4" />}
+              title="Typing Mode"
+              blurb="Type it — typos forgiven"
+            />
+          </div>
+        </Section>
+
+        {error && (
+          <p className="mt-6 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <button
+          onClick={() => void launch()}
+          className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-5 font-display text-lg text-primary-foreground transition-all hover:scale-[1.01] active:scale-[0.99]"
+          style={{ boxShadow: "var(--shadow-glow)" }}
+        >
+          <Wand2 className="h-5 w-5" />
+          Generate My Quest
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Section({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mt-8">
+      <p className="font-display mb-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-accent">
+        {icon}
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function ModeCard({
+  active,
+  onClick,
+  icon,
+  title,
+  blurb,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  blurb: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-2xl border p-4 text-left transition-all ${
+        active ? "border-accent bg-accent/10" : "border-border bg-card hover:border-accent/40"
+      }`}
+      style={active ? { boxShadow: "0 0 34px -14px oklch(0.55 0.22 305)" } : undefined}
+    >
+      <span className={active ? "text-accent" : "text-muted-foreground"}>{icon}</span>
+      <p className={`font-display mt-2 text-base ${active ? "text-accent" : "text-foreground"}`}>
+        {title}
+      </p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{blurb}</p>
+    </button>
+  );
+}
+
+function BoomLoader({ topic, difficulty }: { topic: string; difficulty: Difficulty }) {
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <BgGlow />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-xl flex-col px-5 pb-10 pt-8">
+        <Logo />
+        <div className="mt-20 text-center">
+          <h2
+            className="font-display animate-pulse text-6xl tracking-tight text-primary sm:text-7xl"
+            style={{ textShadow: "0 0 42px oklch(0.92 0.22 122 / 0.75)" }}
+          >
+            BOOOM!
+          </h2>
+          <p className="font-display mt-4 text-2xl text-foreground">Forging your quest…</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {difficulty} · {topic.trim() || "your topic"}
+          </p>
+        </div>
+        <div className="mt-14 space-y-3">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="h-14 animate-pulse rounded-2xl border border-primary/25 bg-primary/5"
+              style={{ animationDelay: `${i * 130}ms`, boxShadow: "0 0 28px -14px var(--primary)" }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuestPlayer({
+  questions,
+  mode,
+  seconds,
+  topic,
+  onExit,
+  onReplay,
+}: {
+  questions: GeneratedQuestion[];
+  mode: AnswerMode;
+  seconds: number;
+  topic: string;
+  onExit: () => void;
+  onReplay: () => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [typed, setTyped] = useState("");
+  const [locked, setLocked] = useState(false);
+  const [wasCorrect, setWasCorrect] = useState(false);
+  const [pattern, setPattern] = useState<boolean[]>([]);
+  const [done, setDone] = useState(false);
+  const [left, setLeft] = useState(seconds);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const total = questions.length;
+  const q = questions[index];
+
+  const advance = useCallback(
+    (correct: boolean) => {
+      setLocked(true);
+      setWasCorrect(correct);
+      const next = [...pattern, correct];
+      setPattern(next);
+      setTimeout(() => {
+        if (index + 1 >= total) {
+          recordPractice(next.filter(Boolean).length);
+          setDone(true);
+        } else {
+          setIndex(index + 1);
+          setSelected(null);
+          setTyped("");
+          setLocked(false);
+          setLeft(seconds);
+        }
+      }, 2400);
+    },
+    [index, pattern, seconds, total],
+  );
+
+  // Per-question countdown.
+  useEffect(() => {
+    if (!seconds || locked || done) return;
+    if (left <= 0) {
+      advance(false);
+      return;
+    }
+    const t = setTimeout(() => setLeft((v) => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [left, seconds, locked, done, advance]);
+
+  useEffect(() => {
+    if (mode === "typing" && !locked) inputRef.current?.focus();
+  }, [index, mode, locked]);
+
+  const timePct = useMemo(
+    () => (seconds ? Math.max(0, Math.min(100, (left / seconds) * 100)) : 100),
+    [left, seconds],
+  );
+
+  if (done) {
+    const correct = pattern.filter(Boolean).length;
+    const xp = correct * 10;
+    const level = getLevelInfo(readStorage().xp);
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-background">
+        <BgGlow />
+        <div className="relative z-10 mx-auto max-w-xl px-5 pb-16 pt-8">
+          <Logo />
+          <div className="mt-14 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-accent">
+              <Wand2 className="h-3.5 w-3.5" /> {topic}
+            </span>
+            <h1 className="font-display mt-6 text-6xl text-foreground">
+              {correct}/{total}
+            </h1>
+            <p className="mt-3 inline-flex items-center gap-2 text-primary">
+              <Zap className="h-4 w-4" /> +{xp} XP earned
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Level {level.level} · {level.title}
+            </p>
+          </div>
+          <button
+            onClick={onReplay}
+            className="mt-10 flex w-full items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-5 font-display text-lg text-primary-foreground transition-all hover:scale-[1.01]"
+            style={{ boxShadow: "var(--shadow-glow)" }}
+          >
+            <RefreshCw className="h-5 w-5" /> Forge Another Quest
+          </button>
+          <button
+            onClick={onExit}
+            className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 font-display text-lg text-foreground transition-all hover:border-primary/40"
+          >
+            <Wand2 className="h-5 w-5" /> Change Settings
+          </button>
+          <Link
+            to="/"
+            className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card px-6 py-5 font-display text-lg text-foreground transition-all hover:border-accent/40"
+          >
+            <Home className="h-5 w-5" /> Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <BgGlow />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-xl flex-col px-5 pb-10 pt-8">
+        <div className="flex items-center justify-between">
+          <Logo />
+          <span className="font-display text-xs uppercase tracking-widest text-accent">
+            Clue {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          </span>
+        </div>
+
+        <div className="mt-6 flex gap-1.5">
+          {questions.map((_, i) => (
+            <div
+              key={i}
+              className="h-1.5 flex-1 rounded-full"
+              style={{
+                background:
+                  i < index ? "var(--primary)" : i === index ? "oklch(0.55 0.22 305)" : "var(--border)",
+              }}
+            />
+          ))}
+        </div>
+
+        {seconds > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" /> Time
+              </span>
+              <span className={left <= 5 ? "text-destructive" : "text-primary"}>{left}s</span>
+            </div>
+            <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border">
+              <div
+                className="h-full rounded-full transition-all duration-1000 ease-linear"
+                style={{
+                  width: `${timePct}%`,
+                  background: left <= 5 ? "var(--destructive)" : "var(--primary)",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 flex-1" key={index}>
+          <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
+            {topic}
+            <span className="ml-2 inline-flex items-center gap-1 text-primary">
+              <Sparkles className="h-3 w-3" /> AI
+            </span>
+          </p>
+          <h2 className="font-display mt-3 text-3xl leading-tight text-foreground sm:text-4xl">
+            {q.question}
+          </h2>
+
+          {mode === "mcq" ? (
+            <div className="mt-8 space-y-3">
+              {q.choices.map((choice, i) => {
+                const isSelected = selected === i;
+                const isCorrect = i === q.correctIndex;
+                const show = locked && (isSelected || isCorrect);
+                let cls = "border-border bg-card hover:border-primary/40 hover:bg-primary/5";
+                if (show) cls = isCorrect ? "border-primary bg-primary/15" : "border-destructive bg-destructive/15";
+                return (
+                  <button
+                    key={i}
+                    disabled={locked}
+                    onClick={() => {
+                      if (locked) return;
+                      setSelected(i);
+                      advance(i === q.correctIndex);
+                    }}
+                    className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all ${cls} disabled:cursor-not-allowed`}
+                  >
+                    <span
+                      className={`font-display grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sm ${
+                        show && isCorrect
+                          ? "bg-primary text-primary-foreground"
+                          : show && isSelected
+                            ? "bg-destructive text-destructive-foreground"
+                            : "bg-secondary text-foreground"
+                      }`}
+                    >
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    <span className="text-base font-medium text-foreground">{choice}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <form
+              className="mt-8"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (locked || !typed.trim()) return;
+                advance(isFuzzyMatch(typed, q.acceptable));
+              }}
+            >
+              <input
+                ref={inputRef}
+                value={typed}
+                disabled={locked}
+                onChange={(e) => setTyped(e.target.value)}
+                placeholder="Type your answer…"
+                className={`w-full rounded-2xl border bg-card px-4 py-5 text-lg text-foreground outline-none transition-all placeholder:text-muted-foreground ${
+                  locked
+                    ? wasCorrect
+                      ? "border-primary"
+                      : "border-destructive"
+                    : "border-border focus:border-primary/60"
+                }`}
+              />
+              {!locked ? (
+                <button
+                  type="submit"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 font-display text-base text-primary-foreground transition-all hover:scale-[1.01]"
+                  style={{ boxShadow: "var(--shadow-glow)" }}
+                >
+                  <Check className="h-4 w-4" /> Lock Answer
+                </button>
+              ) : (
+                <p
+                  className={`mt-4 flex items-center gap-2 font-display text-base ${
+                    wasCorrect ? "text-primary" : "text-destructive"
+                  }`}
+                >
+                  {wasCorrect ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                  {wasCorrect ? "Correct!" : `Answer: ${q.answerText}`}
+                </p>
+              )}
+            </form>
+          )}
+
+          {locked && q.explanation && (
+            <div
+              className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3"
+              style={{ boxShadow: "0 0 30px -18px var(--primary)" }}
+            >
+              <p className="font-display text-[10px] uppercase tracking-[0.25em] text-primary">Why</p>
+              <p className="mt-1 text-sm text-foreground">{q.explanation}</p>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={onExit}
+          className="mt-6 inline-flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <ArrowUpRight className="h-3 w-3 rotate-180" /> Quit quest
+        </button>
+      </div>
+    </div>
+  );
+}
