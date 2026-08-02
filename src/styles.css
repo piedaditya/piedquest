@@ -61,6 +61,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-tutor-bg: var(--tutor-bg);
+  --color-tutor-surface: var(--tutor-surface);
+  --color-tutor-border: var(--tutor-border);
+  --color-tutor-sky: var(--tutor-sky);
+  --color-tutor-sky-soft: var(--tutor-sky-soft);
+  --color-tutor-deep: var(--tutor-deep);
 }
 
 :root {
@@ -107,6 +113,16 @@
   --shadow-card: 0 20px 60px -20px oklch(0.05 0 0 / 0.6);
   --gradient-hero: radial-gradient(ellipse at top, oklch(0.32 0.14 305 / 0.35), transparent 60%);
   --gradient-mystery: radial-gradient(ellipse at center, oklch(0.45 0.18 305 / 0.5), transparent 70%);
+
+  /* Doubt Solver — calm sky blue / deep space learning theme */
+  --tutor-bg: oklch(0.16 0.05 255);
+  --tutor-surface: oklch(0.22 0.06 252);
+  --tutor-border: oklch(0.34 0.08 245);
+  --tutor-sky: oklch(0.8 0.15 225);
+  --tutor-sky-soft: oklch(0.88 0.09 220);
+  --tutor-deep: oklch(0.12 0.05 260);
+  --gradient-tutor: radial-gradient(ellipse at top, oklch(0.45 0.16 235 / 0.4), transparent 62%);
+  --shadow-tutor: 0 0 60px -12px oklch(0.8 0.15 225 / 0.55);
 }
 
 .dark {
