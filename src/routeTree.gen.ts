@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as MyQuestsRouteImport } from './routes/my-quests'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiDoubtChatRouteImport } from './routes/api/doubt-chat'
@@ -29,6 +30,11 @@ const QuizRoute = QuizRouteImport.update({
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyQuestsRoute = MyQuestsRouteImport.update({
+  id: '/my-quests',
+  path: '/my-quests',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -50,6 +56,7 @@ const ApiDoubtChatRoute = ApiDoubtChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/leaderboard'
+    | '/my-quests'
     | '/practice'
     | '/quiz'
     | '/results'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/leaderboard'
+    | '/my-quests'
     | '/practice'
     | '/quiz'
     | '/results'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/leaderboard'
+    | '/my-quests'
     | '/practice'
     | '/quiz'
     | '/results'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  MyQuestsRoute: typeof MyQuestsRoute
   PracticeRoute: typeof PracticeRoute
   QuizRoute: typeof QuizRoute
   ResultsRoute: typeof ResultsRoute
@@ -131,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-quests': {
+      id: '/my-quests'
+      path: '/my-quests'
+      fullPath: '/my-quests'
+      preLoaderRoute: typeof MyQuestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LeaderboardRoute: LeaderboardRoute,
+  MyQuestsRoute: MyQuestsRoute,
   PracticeRoute: PracticeRoute,
   QuizRoute: QuizRoute,
   ResultsRoute: ResultsRoute,
