@@ -63,6 +63,18 @@ function textOf(children: ReactNode): string {
   return "";
 }
 
+/** Wraps bare <svg> blocks (outside code fences) in an ```svg fence so they render. */
+function wrapRawSvg(md: string): string {
+  const parts = md.split(/(```[\s\S]*?```)/g);
+  return parts
+    .map((part) =>
+      part.startsWith("```")
+        ? part
+        : part.replace(/<svg[\s\S]*?<\/svg>/gi, (m) => `\n\n\`\`\`svg\n${m}\n\`\`\`\n\n`),
+    )
+    .join("");
+}
+
 export function TutorMarkdown({ content }: { content: string }) {
   return (
     <div className="text-[15px] leading-relaxed text-foreground [&>*:first-child]:mt-0">
@@ -129,7 +141,7 @@ export function TutorMarkdown({ content }: { content: string }) {
           pre: ({ children }) => <>{children}</>,
         }}
       >
-        {content}
+        {wrapRawSvg(content)}
       </ReactMarkdown>
     </div>
   );
