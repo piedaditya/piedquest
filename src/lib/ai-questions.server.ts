@@ -1,0 +1,105 @@
+// Server-only helpers for AI question generation via Lovable AI Gateway.
+export interface AiQuestion {
+  question: string;
+  choices: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const MODEL = "google/gemini-3.6-flash";
+
+export function buildPrompt(
+  category: string,
+  region: string,
+  count: number,
+  asked: string[],
+): string {
+  const scope =
+    region && region !== "Global"
+      ? `${category} in ${region}`
+      : `${category} (globally famous, recognizable worldwide)`;
+  const avoid = asked.length
+    ? `\n\nDo NOT repeat or paraphrase any of these already-asked questions:\n- ${asked
+        .slice(-60)
+        .join("\n- ")}`
+    : "";
+  return `Generate ${count} highly educational, difficult multiple-choice trivia questions about ${scope}. Each must have exactly 4 options with exactly one correct answer, plus a short educational explanation (1-2 sentences).
+
+Return output strictly as JSON with this shape:
+{"questions":[{"question_text":"...","options":["a","b","c","d"],"correct_answer":"exact text of the correct option","explanation":"..."}]}${avoid}`;
+}
+
+export function parseAiQuestions(raw: string): AiQuestion[] {
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start === -1 || end === -1) return [];
+  let payload: unknown;
+  try {
+    payload = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return [];
+  }
+  const list = (payload as { questions?: unknown })?.questions;
+  if (!Array.isArray(list)) return [];
+  const out: AiQuestion[] = [];
+  for (const item of list) {
+    const q = item as Record<string, unknown>;
+    const question = typeof q["question_text"] === "string" ? q["question_text"] : "";
+    const options = Array.isArray(q["options"])
+      ? (q["options"] as unknown[]).filter((o): o is string => typeof o === "string")
+      : [];
+    const answer = typeof q["correct_answer"] === "string" ? q["correct_answer"] : "";
+    const explanation = typeof q["explanation"] === "string" ? q["explanation"] : "";
+    if (!question || options.length !== 4) continue;
+    let correctIndex = options.findIndex(
+      (o) => o.trim().toLowerCase() === answer.trim().toLowerCase(),
+    );
+    if (correctIndex < 0) correctIndex = 0;
+    out.push({ question, choices: options, correctIndex, explanation });
+  }
+  return out;
+}
+
+export async function generateQuestions(args: {
+  category: string;
+  region: string;
+  count: number;
+  asked: string[];
+}): Promise<AiQuestion[]> {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new Error("AI is not configured");
+
+  const response = await fetch(GATEWAY, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Lovable-API-Key": apiKey,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a trivia master. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate and never repeated.",
+        },
+        { role: "user", content: buildPrompt(args.category, args.region, args.count, args.asked) },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    if (response.status === 429) throw new Error("AI is busy right now — try again in a moment.");
+    if (response.status === 402) throw new Error("AI credits exhausted. Add credits to keep generating quests.");
+    throw new Error(`AI request failed [${response.status}]: ${body.slice(0, 300)}`);
+  }
+
+  const data = (await response.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  const content = data.choices?.[0]?.message?.content ?? "";
+  return parseAiQuestions(content);
+}
