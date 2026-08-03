@@ -23,7 +23,8 @@ import {
   recordPractice,
   type QuizStorage,
 } from "@/lib/quiz-storage";
-import { BgGlow, FullBleed, Loader, Logo } from "@/lib/quest-ui";
+import { BgGlow, FullBleed, Loader, Logo, QuestTimer, useRoundTimer } from "@/lib/quest-ui";
+import { shuffleOptions } from "@/lib/shuffle-options";
 import { bucketFor, drawFreshRound, getSeen, markSeen, resetSeen } from "@/lib/seen-questions";
 import { addWrongId, pickReviewQuestion, removeWrongId } from "@/lib/wrong-tracker";
 import type { Region } from "@/lib/regional-content";
@@ -122,7 +123,8 @@ function PracticeContainer({
       if (!questions.length) throw new Error("empty");
       rememberAskedQuestions(questions.map((q) => q.question));
       setAiQuestions(
-        questions.map((q, i) => ({
+        questions.map((q, i) =>
+          shuffleOptions({
           id: `ai-${Date.now()}-${i}`,
           quizNumber: 0,
           order: i,
@@ -132,7 +134,8 @@ function PracticeContainer({
           category,
           explanation: q.explanation,
           aiGenerated: true,
-        })),
+          }),
+        ),
       );
     } catch (error) {
       setAiQuestions(null);
