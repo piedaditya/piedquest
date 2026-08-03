@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowUpRight,
@@ -9,6 +9,7 @@ import {
   RefreshCw,
   RotateCcw,
   Sparkles,
+  Timer,
   Zap,
 } from "lucide-react";
 import {
@@ -28,6 +29,8 @@ import { shuffleOptions } from "@/lib/shuffle-options";
 import { bucketFor, drawFreshRound, getSeen, markSeen, resetSeen } from "@/lib/seen-questions";
 import { addWrongId, pickReviewQuestion, removeWrongId } from "@/lib/wrong-tracker";
 import type { Region } from "@/lib/regional-content";
+
+const ROUND_SECONDS = 60;
 
 export const Route = createFileRoute("/practice")({
   component: PracticeRoute,
@@ -296,13 +299,29 @@ function PracticePlay({
   const [pattern, setPattern] = useState<boolean[]>([]);
   const [visible, setVisible] = useState(true);
   const [done, setDone] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
   const total = questions.length;
   const q = questions[index];
   const isReview = reviewId != null && q.id === reviewId;
 
+  const patternRef = useRef(pattern);
+  patternRef.current = pattern;
+
+  const left = useRoundTimer(
+    ROUND_SECONDS,
+    () => {
+      if (done) return;
+      setTimedOut(true);
+      onFinish(patternRef.current.filter(Boolean).length);
+      setDone(true);
+    },
+    !done,
+    questions[0]?.id ?? 0,
+  );
+
   const handlePick = (i: number) => {
-    if (locked) return;
+    if (locked || done) return;
     setSelected(i);
     setLocked(true);
     const isCorrect = i === q.correctIndex;
@@ -347,6 +366,15 @@ function PracticePlay({
               <InfinityIcon className="h-3.5 w-3.5" />
               Custom Quest · {fandom}
             </span>
+            {timedOut && (
+              <span
+                className="ml-2 inline-flex items-center gap-2 rounded-full border border-destructive/50 bg-destructive/15 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-destructive"
+                style={{ boxShadow: "0 0 26px -8px var(--destructive)" }}
+              >
+                <Timer className="h-3.5 w-3.5" />
+                Time's Up!
+              </span>
+            )}
             <h1 className="font-display mt-6 text-6xl text-foreground">
               {correct}/{total}
             </h1>
@@ -416,6 +444,8 @@ function PracticePlay({
             />
           ))}
         </div>
+
+        <QuestTimer left={left} total={ROUND_SECONDS} />
 
         <div
           className="mt-10 flex-1 transition-all duration-300"
