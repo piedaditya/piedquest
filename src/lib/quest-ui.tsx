@@ -1,6 +1,84 @@
-import { Flame } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { Clock, Flame } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { msUntilMidnight } from "./quiz-storage";
+
+/**
+ * Counts down `total` seconds for one quest round. Restarts whenever
+ * `resetKey` changes so a brand-new round always begins at full time.
+ */
+export function useRoundTimer(
+  total: number,
+  onExpire: () => void,
+  active: boolean,
+  resetKey: unknown = 0,
+): number {
+  const [left, setLeft] = useState(total);
+  const expireRef = useRef(onExpire);
+  expireRef.current = onExpire;
+
+  useEffect(() => {
+    setLeft(total);
+  }, [total, resetKey]);
+
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => {
+      setLeft((v) => {
+        if (v <= 1) {
+          clearInterval(id);
+          expireRef.current();
+          return 0;
+        }
+        return v - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [active, total, resetKey]);
+
+  return left;
+}
+
+export function QuestTimer({ left, total }: { left: number; total: number }) {
+  const pct = Math.max(0, Math.min(100, (left / total) * 100));
+  const urgent = left <= 10;
+  return (
+    <div
+      className={`mt-4 rounded-2xl border px-4 py-3 transition-colors ${
+        urgent ? "animate-pulse border-destructive/60" : "border-border"
+      }`}
+      style={{
+        background: urgent
+          ? "oklch(0.45 0.2 25 / 0.12)"
+          : "oklch(0.19 0.035 285 / 0.5)",
+        boxShadow: urgent
+          ? "0 0 34px -8px var(--destructive)"
+          : "0 0 26px -18px var(--primary)",
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 font-display text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" /> Round time
+        </span>
+        <span
+          className={`font-display text-lg tabular-nums ${urgent ? "text-destructive" : "text-primary"}`}
+          style={urgent ? { textShadow: "0 0 18px var(--destructive)" } : undefined}
+        >
+          0:{String(Math.max(0, left)).padStart(2, "0")}
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
+        <div
+          className="h-full rounded-full transition-all duration-1000 ease-linear"
+          style={{
+            width: `${pct}%`,
+            background: urgent ? "var(--destructive)" : "var(--primary)",
+            boxShadow: urgent ? "0 0 16px var(--destructive)" : "0 0 12px var(--primary)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function FullBleed({ children }: { children: ReactNode }) {
   return (

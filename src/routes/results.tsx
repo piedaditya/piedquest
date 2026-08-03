@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Home, Share2, Trophy } from "lucide-react";
+import { Home, Share2, Timer, Trophy } from "lucide-react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   dailyQuizQueryOptions,
@@ -98,6 +98,7 @@ function Results({
 }) {
   const score = storage.lastScore ?? pattern.filter(Boolean).length;
   const streak = getCurrentStreak(storage);
+  const timedOut = storage.lastTimedOut === true;
   const [copied, setCopied] = useState(false);
 
   const emojiGrid = useMemo(
@@ -130,7 +131,9 @@ function Results({
     }
   };
 
-  const verdict =
+  const verdict = timedOut
+    ? "Time's up."
+    :
     score === 5 ? "Flawless." : score >= 4 ? "Certified fan." : score >= 2 ? "Not bad." : "Ouch.";
 
   return (
@@ -144,11 +147,21 @@ function Results({
             <Trophy className="h-3.5 w-3.5" />
             Quest #{quiz.quizNumber} · Complete
           </span>
+          {timedOut && (
+            <span
+              className="ml-2 inline-flex items-center gap-2 rounded-full border border-destructive/50 bg-destructive/15 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-destructive"
+              style={{ boxShadow: "0 0 26px -8px var(--destructive)" }}
+            >
+              <Timer className="h-3.5 w-3.5" />
+              Time's Up!
+            </span>
+          )}
           <h1 className="font-display mt-6 text-6xl text-foreground">
             {verdict}
           </h1>
           <p className="mt-3 text-muted-foreground">
             You got <span className="text-primary">{score} out of 5</span> today.
+            {timedOut && " The clock beat you to the last clues."}
           </p>
         </div>
 

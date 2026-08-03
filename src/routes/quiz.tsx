@@ -1,13 +1,15 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import {
   dailyQuizQueryOptions,
   type DailyQuiz,
 } from "@/lib/quiz-queries";
 import { hasPlayedToday, readStorage, recordCompletion } from "@/lib/quiz-storage";
-import { BgGlow, FullBleed, Loader, Logo } from "@/lib/quest-ui";
+import { BgGlow, FullBleed, Loader, Logo, QuestTimer, useRoundTimer } from "@/lib/quest-ui";
 import { addWrongId } from "@/lib/wrong-tracker";
+
+const ROUND_SECONDS = 60;
 
 export const Route = createFileRoute("/quiz")({
   beforeLoad: () => {
@@ -54,12 +56,13 @@ function QuizContainer() {
   return (
     <Playing
       quiz={data}
-      onComplete={(pattern) => {
+      onComplete={(pattern, timedOut) => {
         const score = pattern.filter(Boolean).length;
         recordCompletion({
           score,
           pattern,
           quizNumber: data.quizNumber,
+          timedOut,
         });
         // replace: back from /results goes to / (Landing), not back into the quiz
         navigate({ to: "/results", replace: true });
@@ -73,19 +76,34 @@ function Playing({
   onComplete,
 }: {
   quiz: DailyQuiz;
-  onComplete: (pattern: boolean[]) => void;
+  onComplete: (pattern: boolean[], timedOut: boolean) => void;
 }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [pattern, setPattern] = useState<boolean[]>([]);
   const [visible, setVisible] = useState(true);
+  const [finished, setFinished] = useState(false);
 
   const total = quiz.questions.length;
   const q = quiz.questions[index];
 
+  const patternRef = useRef(pattern);
+  patternRef.current = pattern;
+
+  const left = useRoundTimer(
+    ROUND_SECONDS,
+    () => {
+      if (finished) return;
+      setFinished(true);
+      onComplete(patternRef.current, true);
+    },
+    !finished,
+    quiz.quizDate,
+  );
+
   const handlePick = (i: number) => {
-    if (locked) return;
+    if (locked || finished) return;
     setSelected(i);
     setLocked(true);
     const isCorrect = i === q.correctIndex;
@@ -97,7 +115,8 @@ function Playing({
       setVisible(false);
       setTimeout(() => {
         if (index + 1 >= total) {
-          onComplete(nextPattern);
+          setFinished(true);
+          onComplete(nextPattern, false);
         } else {
           setIndex(index + 1);
           setSelected(null);
@@ -135,6 +154,8 @@ function Playing({
             />
           ))}
         </div>
+
+        <QuestTimer left={left} total={ROUND_SECONDS} />
 
         <div
           className="mt-10 flex-1 transition-all duration-300"

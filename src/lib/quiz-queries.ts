@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getLocalDateString } from "./quiz-storage";
 import { getMockPool } from "./practice-mocks";
 import { buildFallbackDailyQuiz } from "./daily-fallback";
+import { shuffleOptionsAll } from "./shuffle-options";
 import {
   getGKRegional,
   getGKWorld,
@@ -39,10 +40,12 @@ async function fetchTodaysQuiz(): Promise<DailyQuiz | null> {
   if (error || !data || data.length === 0) {
     // Guarantee a daily quest exists every day, worldwide. Falls back to a
     // deterministic pick from the globally-famous mock pool.
-    return buildFallbackDailyQuiz(today);
+    const fallback = buildFallbackDailyQuiz(today);
+    return { ...fallback, questions: shuffleOptionsAll(fallback.questions) };
   }
 
-  const questions: Question[] = data.map((row) => ({
+  const questions: Question[] = shuffleOptionsAll(
+    data.map((row) => ({
     id: row.id,
     quizNumber: row.quiz_number,
     order: row.question_order,
@@ -50,7 +53,8 @@ async function fetchTodaysQuiz(): Promise<DailyQuiz | null> {
     choices: row.choices as string[],
     correctIndex: row.correct_index,
     category: row.category,
-  }));
+    })),
+  );
 
   return {
     quizDate: today,
@@ -114,7 +118,7 @@ async function fetchPracticePool(
   const { data, error } = await query;
   if (error) {
     // Fall back to local pool if network/db fails so practice never appears empty.
-    return mocks;
+    return shuffleOptionsAll(mocks);
   }
   const fromDb: Question[] = (data ?? []).map((row) => ({
     id: row.id,
@@ -125,7 +129,7 @@ async function fetchPracticePool(
     correctIndex: row.correct_index,
     category: row.category,
   }));
-  return [...fromDb, ...mocks];
+  return shuffleOptionsAll([...fromDb, ...mocks]);
 }
 
 export const practicePoolQueryOptions = (

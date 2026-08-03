@@ -20,6 +20,7 @@ import type {
   Difficulty,
   GeneratedQuestion,
 } from "@/lib/custom-quest.server";
+import { shuffleOptions } from "@/lib/shuffle-options";
 import { isFuzzyMatch } from "@/lib/fuzzy-match";
 import { getLevelInfo, readStorage, recordPractice } from "@/lib/quiz-storage";
 import { BgGlow, FullBleed, Logo } from "@/lib/quest-ui";
@@ -100,7 +101,15 @@ function MyQuestsRoute() {
         data: { topic: clean, difficulty, mode, count: 5 },
       });
       if (!q.length) throw new Error("The AI returned no questions — try rephrasing your topic.");
-      const usable = mode === "mcq" ? q.filter((x) => x.choices.length === 4) : q;
+      const usable =
+        mode === "mcq"
+          ? q
+              .filter((x) => x.choices.length === 4)
+              .map((x) => {
+                const shuffled = shuffleOptions(x);
+                return { ...shuffled, answerText: shuffled.choices[shuffled.correctIndex] };
+              })
+          : q;
       if (!usable.length) throw new Error("The AI returned no usable questions — try again.");
       setQuestions(usable);
       setPhase("play");
