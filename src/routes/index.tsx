@@ -188,6 +188,8 @@ function Landing({
 
         <LeaderboardTeaser />
 
+        <QuickQaTeaser />
+
         <section
           className="mt-14 rounded-3xl border border-border p-5"
           style={{
