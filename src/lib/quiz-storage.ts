@@ -5,6 +5,7 @@ export interface QuizStorage {
   lastScore: number | null;
   lastPattern: boolean[] | null;
   lastQuizNumber: number | null;
+  lastTimedOut: boolean;
   streak: number;
   bestScore: number;
   xp: number;
@@ -19,6 +20,7 @@ const defaultState: QuizStorage = {
   lastScore: null,
   lastPattern: null,
   lastQuizNumber: null,
+  lastTimedOut: false,
   streak: 0,
   bestScore: 0,
   xp: 0,
@@ -62,6 +64,7 @@ export function recordCompletion(params: {
   score: number;
   pattern: boolean[];
   quizNumber: number;
+  timedOut?: boolean;
 }): QuizStorage {
   const today = getLocalDateString();
   const prev = readStorage();
@@ -81,6 +84,7 @@ export function recordCompletion(params: {
     lastScore: params.score,
     lastPattern: params.pattern,
     lastQuizNumber: params.quizNumber,
+    lastTimedOut: params.timedOut ?? false,
     streak,
     bestScore: Math.max(prev.bestScore, params.score),
     xp: prev.xp + params.score * 10,
