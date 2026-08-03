@@ -520,10 +520,6 @@ function PracticeCard({ fandom }: { fandom: string }) {
   );
 }
 
-function LeaderboardTeaser() {
-  return null;
-}
-
 function QuickQaTeaser() {
   return (
     <section
@@ -559,7 +555,7 @@ function QuickQaTeaser() {
   );
 }
 
-function LeaderboardTeaserImpl() {
+function LeaderboardTeaser() {
   return (
     <section
       className="mt-8 rounded-3xl border border-border p-6"
