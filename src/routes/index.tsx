@@ -521,6 +521,45 @@ function PracticeCard({ fandom }: { fandom: string }) {
 }
 
 function LeaderboardTeaser() {
+  return null;
+}
+
+function QuickQaTeaser() {
+  return (
+    <section
+      className="mt-8 rounded-3xl border border-border p-6"
+      style={{
+        background:
+          "linear-gradient(160deg, oklch(0.28 0.15 122 / 0.12), oklch(0.19 0.035 285 / 0.7))",
+        boxShadow: "var(--shadow-card)",
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
+          <Sparkles className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
+            Quick Q&amp;A
+          </p>
+          <p className="font-display text-xl text-foreground">Ask anything, fast</p>
+        </div>
+      </div>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Type a question and get a short, crystal-clear AI answer — no long paragraphs.
+      </p>
+      <Link
+        to="/quick-qa"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 py-3.5 font-display text-base text-foreground transition-all hover:border-accent/40 hover:bg-accent/5"
+      >
+        Open Quick Q&amp;A
+        <ArrowUpRight className="h-4 w-4" />
+      </Link>
+    </section>
+  );
+}
+
+function LeaderboardTeaserImpl() {
   return (
     <section
       className="mt-8 rounded-3xl border border-border p-6"
