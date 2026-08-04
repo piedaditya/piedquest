@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Home, Share2, Timer, Trophy } from "lucide-react";
+import { Home, Share2, ShieldAlert, Timer, Trophy } from "lucide-react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import {
   dailyQuizQueryOptions,
@@ -13,6 +13,7 @@ import {
   type QuizStorage,
 } from "@/lib/quiz-storage";
 import { upsertLeaderboardEntry } from "@/lib/leaderboard";
+import { formatMs, submitDailyRun } from "@/lib/daily-leaderboard";
 import {
   BgGlow,
   FullBleed,
@@ -63,7 +64,13 @@ function ResultsContainer() {
     void upsertLeaderboardEntry({
       streak: getCurrentStreak(s),
       xp: s.xp,
+      score: Math.min(5, s.lastScore),
+    });
+    void submitDailyRun({
       score: s.lastScore,
+      timeMs: s.lastTimeMs ?? 0,
+      tabSwitches: s.lastTabSwitches,
+      disqualified: s.lastDisqualified,
     });
   }, []);
 
@@ -99,17 +106,25 @@ function Results({
   const score = storage.lastScore ?? pattern.filter(Boolean).length;
   const streak = getCurrentStreak(storage);
   const timedOut = storage.lastTimedOut === true;
+  const disqualified = storage.lastDisqualified === true;
+  const timeMs = storage.lastTimeMs ?? 0;
+  const total = 15;
   const [copied, setCopied] = useState(false);
 
-  const emojiGrid = useMemo(
-    () => pattern.map((c) => (c ? "🟩" : "🟥")).join(""),
-    [pattern],
-  );
+  const emojiGrid = useMemo(() => {
+    const cells = pattern.map((c) => (c ? "🟩" : "🟥"));
+    const rows: string[] = [];
+    for (let i = 0; i < cells.length; i += 5) rows.push(cells.slice(i, i + 5).join(""));
+    return rows.join("\n");
+  }, [pattern]);
 
   const shareText = useMemo(() => {
     const url = typeof window !== "undefined" ? window.location.origin : "";
-    return `DailyQuest #${quiz.quizNumber} — ${score}/5\n\n${emojiGrid}\n\n🔥 ${streak} Day Streak!\n\nPlay at ${url}`;
-  }, [quiz.quizNumber, score, emojiGrid, streak]);
+    const line = disqualified
+      ? "❌ Disqualified for cheating"
+      : `⏱ ${formatMs(timeMs)}`;
+    return `Piedquest Global Daily #${quiz.quizNumber} — ${score}/${total}\n${line}\n\n${emojiGrid}\n\n🔥 ${streak} Day Streak!\n\nPlay at ${url}`;
+  }, [quiz.quizNumber, score, emojiGrid, streak, disqualified, timeMs]);
 
   const onShare = async () => {
     try {
@@ -131,10 +146,19 @@ function Results({
     }
   };
 
-  const verdict = timedOut
-    ? "Time's up."
-    :
-    score === 5 ? "Flawless." : score >= 4 ? "Certified fan." : score >= 2 ? "Not bad." : "Ouch.";
+  const verdict = disqualified
+    ? "Disqualified."
+    : timedOut
+      ? "Time's up."
+      : score === 15
+        ? "Flawless."
+        : score >= 12
+          ? "Top tier."
+          : score >= 8
+            ? "Solid run."
+            : score >= 4
+              ? "Room to grow."
+              : "Ouch.";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -145,8 +169,17 @@ function Results({
         <div className="mt-10">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-primary">
             <Trophy className="h-3.5 w-3.5" />
-            Quest #{quiz.quizNumber} · Complete
+            Global Daily #{quiz.quizNumber} · Complete
           </span>
+          {disqualified && (
+            <span
+              className="ml-2 inline-flex items-center gap-2 rounded-full border border-destructive/50 bg-destructive/15 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-destructive"
+              style={{ boxShadow: "0 0 26px -8px var(--destructive)" }}
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Disqualified for Cheating
+            </span>
+          )}
           {timedOut && (
             <span
               className="ml-2 inline-flex items-center gap-2 rounded-full border border-destructive/50 bg-destructive/15 px-3 py-1.5 font-display text-xs uppercase tracking-widest text-destructive"
@@ -160,8 +193,17 @@ function Results({
             {verdict}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            You got <span className="text-primary">{score} out of 5</span> today.
-            {timedOut && " The clock beat you to the last clues."}
+            You got <span className="text-primary">{score} out of {total}</span> today
+            {!disqualified && (
+              <>
+                {" "}in <span className="text-primary tabular-nums">{formatMs(timeMs)}</span>
+              </>
+            )}
+            .
+            {disqualified && " Tab switching locked your score at 0."}
+            {storage.lastTabSwitches === 1 &&
+              !disqualified &&
+              " A +10s anti-cheat penalty was included."}
           </p>
         </div>
 
