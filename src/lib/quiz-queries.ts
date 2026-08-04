@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalDateString } from "./quiz-storage";
 import { getMockPool } from "./practice-mocks";
-import { buildFallbackDailyQuiz } from "./daily-fallback";
+import { buildGlobalDaily } from "./global-daily";
 import { shuffleOptionsAll } from "./shuffle-options";
 import {
   getGKRegional,
@@ -21,6 +21,7 @@ export interface Question {
   category: string | null;
   explanation?: string;
   aiGenerated?: boolean;
+  difficulty?: "easy" | "medium" | "hard" | "extreme";
 }
 
 export interface DailyQuiz {
@@ -30,37 +31,10 @@ export interface DailyQuiz {
 }
 
 async function fetchTodaysQuiz(): Promise<DailyQuiz | null> {
-  const today = getLocalDateString();
-  const { data, error } = await supabase
-    .from("daily_questions")
-    .select("id, quiz_date, quiz_number, question_order, question, choices, correct_index, category")
-    .eq("quiz_date", today)
-    .order("question_order", { ascending: true });
-
-  if (error || !data || data.length === 0) {
-    // Guarantee a daily quest exists every day, worldwide. Falls back to a
-    // deterministic pick from the globally-famous mock pool.
-    const fallback = buildFallbackDailyQuiz(today);
-    return { ...fallback, questions: shuffleOptionsAll(fallback.questions) };
-  }
-
-  const questions: Question[] = shuffleOptionsAll(
-    data.map((row) => ({
-    id: row.id,
-    quizNumber: row.quiz_number,
-    order: row.question_order,
-    question: row.question,
-    choices: row.choices as string[],
-    correctIndex: row.correct_index,
-    category: row.category,
-    })),
-  );
-
-  return {
-    quizDate: today,
-    quizNumber: questions[0].quizNumber,
-    questions,
-  };
+  // The Global Daily Challenge is 100% universal and educational: it is built
+  // deterministically from the graded universal bank, never from regional or
+  // pop-culture content.
+  return buildGlobalDaily(getLocalDateString());
 }
 
 export const dailyQuizQueryOptions = queryOptions({

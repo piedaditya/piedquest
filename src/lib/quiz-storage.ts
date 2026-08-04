@@ -6,6 +6,9 @@ export interface QuizStorage {
   lastPattern: boolean[] | null;
   lastQuizNumber: number | null;
   lastTimedOut: boolean;
+  lastTimeMs: number | null;
+  lastTabSwitches: number;
+  lastDisqualified: boolean;
   streak: number;
   bestScore: number;
   xp: number;
@@ -21,6 +24,9 @@ const defaultState: QuizStorage = {
   lastPattern: null,
   lastQuizNumber: null,
   lastTimedOut: false,
+  lastTimeMs: null,
+  lastTabSwitches: 0,
+  lastDisqualified: false,
   streak: 0,
   bestScore: 0,
   xp: 0,
@@ -65,6 +71,9 @@ export function recordCompletion(params: {
   pattern: boolean[];
   quizNumber: number;
   timedOut?: boolean;
+  timeMs?: number;
+  tabSwitches?: number;
+  disqualified?: boolean;
 }): QuizStorage {
   const today = getLocalDateString();
   const prev = readStorage();
@@ -85,6 +94,9 @@ export function recordCompletion(params: {
     lastPattern: params.pattern,
     lastQuizNumber: params.quizNumber,
     lastTimedOut: params.timedOut ?? false,
+    lastTimeMs: params.timeMs ?? null,
+    lastTabSwitches: params.tabSwitches ?? 0,
+    lastDisqualified: params.disqualified ?? false,
     streak,
     bestScore: Math.max(prev.bestScore, params.score),
     xp: prev.xp + params.score * 10,
