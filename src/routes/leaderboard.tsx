@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Crown, Flame, Home, Loader2, Pencil, Trophy, Zap } from "lucide-react";
+import { Crown, Flame, Home, Loader2, Pencil, ShieldAlert, Trophy, Zap } from "lucide-react";
 import { BgGlow, Logo } from "@/lib/quest-ui";
 import { getLevelInfo, readStorage, type QuizStorage } from "@/lib/quiz-storage";
 import {
@@ -13,6 +13,12 @@ import {
   type LeaderboardRow,
 } from "@/lib/leaderboard";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchDailyTop,
+  fetchMyDailyRun,
+  formatMs,
+  type DailyRunRow,
+} from "@/lib/daily-leaderboard";
 
 export const Route = createFileRoute("/leaderboard")({
   component: LeaderboardRoute,
@@ -26,7 +32,7 @@ function avatarFor(id: string): string {
 }
 
 function LeaderboardRoute() {
-  const [tab, setTab] = useState<"xp" | "streak">("xp");
+  const [tab, setTab] = useState<"daily" | "xp" | "streak">("daily");
   const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
   const [clientId, setClientId] = useState("");
   const [username, setLocalName] = useState("");
@@ -44,6 +50,20 @@ function LeaderboardRoute() {
     queryKey: ["leaderboard", tab],
     queryFn: () => (tab === "xp" ? fetchTopLeaderboard(10) : fetchTopByStreak(10)),
     refetchInterval: 15_000,
+    enabled: tab !== "daily",
+  });
+
+  const dailyQuery = useQuery<DailyRunRow[]>({
+    queryKey: ["daily-leaderboard"],
+    queryFn: () => fetchDailyTop(),
+    refetchInterval: 15_000,
+    enabled: tab === "daily",
+  });
+
+  const myRunQuery = useQuery<DailyRunRow | null>({
+    queryKey: ["daily-leaderboard-me", clientId],
+    queryFn: () => fetchMyDailyRun(),
+    enabled: tab === "daily" && !!clientId,
   });
 
   useEffect(() => {
@@ -62,6 +82,9 @@ function LeaderboardRoute() {
   }, []);
 
   const rows = query.data ?? [];
+  const dailyRows = dailyQuery.data ?? [];
+  const myRun = myRunQuery.data ?? null;
+  const myDailyRank = dailyRows.findIndex((r) => r.user_id === clientId);
   const myRank = rows.findIndex((r) => r.client_id === clientId);
 
   const commitName = () => {
@@ -91,16 +114,27 @@ function LeaderboardRoute() {
           </p>
         </section>
 
-        <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-1">
+        <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card p-1">
+          <TabBtn active={tab === "daily"} onClick={() => setTab("daily")}>
+            Daily
+          </TabBtn>
           <TabBtn active={tab === "xp"} onClick={() => setTab("xp")}>
             Top XP
           </TabBtn>
           <TabBtn active={tab === "streak"} onClick={() => setTab("streak")}>
-            Longest Streak
+            Streak
           </TabBtn>
         </div>
 
-        {query.isLoading ? (
+        {tab === "daily" ? (
+          <DailyBoard
+            rows={dailyRows}
+            loading={dailyQuery.isLoading}
+            clientId={clientId}
+            myRun={myRun}
+            myRank={myDailyRank}
+          />
+        ) : query.isLoading ? (
           <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading live standings…
