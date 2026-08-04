@@ -253,9 +253,9 @@ function LeaderboardRoute() {
                 </button>
               )}
               <p className="mt-1 text-xs text-muted-foreground">
-                {myRank >= 0
-                  ? `Ranked #${myRank + 1} on this board`
-                  : "Play today's quest to enter the board"}
+                {(tab === "daily" ? myDailyRank : myRank) >= 0
+                  ? `Ranked #${(tab === "daily" ? myDailyRank : myRank) + 1} on this board`
+                  : "Play today's challenge to enter the board"}
                 {" · "}
                 {level.totalXp} XP
               </p>
