@@ -298,3 +298,116 @@ function TabBtn({
     </button>
   );
 }
+
+function DailyBoard({
+  rows,
+  loading,
+  clientId,
+  myRun,
+  myRank,
+}: {
+  rows: DailyRunRow[];
+  loading: boolean;
+  clientId: string;
+  myRun: DailyRunRow | null;
+  myRank: number;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading today's global standings…
+      </div>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+        No runs today yet — finish the Global Daily Challenge to claim rank #1.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-6">
+      <div className="grid grid-cols-[2.2rem_1fr_3rem_5.5rem] gap-2 px-3 pb-2 font-display text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        <span>#</span>
+        <span>Player</span>
+        <span className="text-right">Score</span>
+        <span className="text-right">Time</span>
+      </div>
+      <ol className="space-y-1.5">
+        {rows.map((r, i) => (
+          <DailyRow key={r.id} row={r} rank={i + 1} isMe={r.user_id === clientId} />
+        ))}
+      </ol>
+
+      {myRun && myRank < 0 && (
+        <div className="mt-4">
+          <p className="px-3 pb-2 font-display text-[10px] uppercase tracking-[0.2em] text-accent">
+            Your run
+          </p>
+          <DailyRow row={myRun} rank={null} isMe />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DailyRow({
+  row,
+  rank,
+  isMe,
+}: {
+  row: DailyRunRow;
+  rank: number | null;
+  isMe: boolean;
+}) {
+  return (
+    <li
+      className={`grid grid-cols-[2.2rem_1fr_3rem_5.5rem] items-center gap-2 rounded-xl border px-3 py-2.5 ${
+        isMe ? "border-primary" : "border-border"
+      }`}
+      style={{
+        background:
+          rank === 1
+            ? "linear-gradient(90deg, oklch(0.28 0.15 122 / 0.25), oklch(0.19 0.035 285 / 0.6))"
+            : isMe
+              ? "linear-gradient(90deg, oklch(0.28 0.15 122 / 0.15), oklch(0.19 0.035 285 / 0.6))"
+              : "oklch(0.19 0.035 285 / 0.55)",
+      }}
+    >
+      <span className="font-display text-sm text-muted-foreground">
+        {rank === 1 ? <Crown className="h-4 w-4 text-primary" /> : (rank ?? "—")}
+      </span>
+      <span className="min-w-0">
+        <span className="font-display block truncate text-sm text-foreground">
+          @{row.username}
+          {isMe && (
+            <span className="ml-2 rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-primary">
+              You
+            </span>
+          )}
+        </span>
+        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+          {row.disqualified ? (
+            <span className="inline-flex items-center gap-1 text-destructive">
+              <ShieldAlert className="h-3 w-3" /> Disqualified
+            </span>
+          ) : row.tab_switches > 0 ? (
+            <span className="text-accent">+10s penalty</span>
+          ) : (
+            <span className="text-primary">Clean run</span>
+          )}
+        </span>
+      </span>
+      <span className="text-right font-display text-sm tabular-nums text-primary">
+        {row.score}/15
+      </span>
+      <span className="text-right font-display text-sm tabular-nums text-foreground">
+        {formatMs(row.time_ms)}
+      </span>
+    </li>
+  );
+}
