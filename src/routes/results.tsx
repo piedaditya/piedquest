@@ -221,7 +221,7 @@ function Results({
             </p>
             <StreakPill streak={streak} />
           </div>
-          <p className="mt-6 text-center text-5xl tracking-[0.15em]">
+          <p className="mt-6 whitespace-pre-line text-center text-3xl leading-relaxed tracking-[0.15em]">
             {emojiGrid}
           </p>
 
@@ -241,6 +241,14 @@ function Results({
         </div>
 
         <NextQuestCountdown />
+
+        <Link
+          to="/leaderboard"
+          className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-5 font-display text-lg text-primary transition-all hover:bg-primary/15"
+        >
+          <Trophy className="h-5 w-5" />
+          See Global Rankings
+        </Link>
 
         <Link
           to="/"
