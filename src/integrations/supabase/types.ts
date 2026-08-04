@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_leaderboard: {
+        Row: {
+          created_at: string
+          disqualified: boolean
+          id: string
+          quiz_date: string
+          score: number
+          tab_switches: number
+          time_ms: number
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          disqualified?: boolean
+          id?: string
+          quiz_date?: string
+          score?: number
+          tab_switches?: number
+          time_ms?: number
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          disqualified?: boolean
+          id?: string
+          quiz_date?: string
+          score?: number
+          tab_switches?: number
+          time_ms?: number
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       daily_questions: {
         Row: {
           category: string | null

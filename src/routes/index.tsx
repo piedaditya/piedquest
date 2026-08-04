@@ -142,13 +142,14 @@ function Landing({
         <section className="mt-10">
           {quiz && <LivePill quizNumber={quiz.quizNumber} />}
           <h1 className="font-display mt-6 text-[3.4rem] leading-[0.95] text-foreground sm:text-6xl">
-            Piedquest: Test Your Fandom.
+            Piedquest: The Global
             <br />
-            Every Single Day.
+            Daily Challenge.
           </h1>
           <p className="mt-5 max-w-md text-base text-muted-foreground">
-            One character. Six clues. A fresh test of your pop-culture brain
-            every 24 hours.
+            15 universal questions — tech, AI, maths, science and world
+            knowledge — on a strict easy-to-brutal difficulty curve. Timed to
+            the millisecond, ranked globally, every 24 hours.
           </p>
 
           <Link
@@ -162,10 +163,10 @@ function Landing({
 
           <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            60 seconds
+            15 questions · Speed-ranked to the millisecond
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            No signup. No spoilers.
+            Anti-cheat active: leaving the tab costs you 10 seconds.
           </p>
         </section>
 
