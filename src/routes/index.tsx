@@ -185,11 +185,11 @@ function Landing({
 
         {playedToday && <NextQuestCountdown />}
 
-        <PracticeCard fandom={activeFandom} />
+        <MyQuestsPromo />
+
+        <QuickQaPromo />
 
         <LeaderboardTeaser />
-
-        <QuickQaTeaser />
 
         <section
           className="mt-14 rounded-3xl border border-border p-5"
