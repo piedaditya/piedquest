@@ -97,9 +97,16 @@ function MyQuestsRoute() {
     setError(null);
     setPhase("loading");
     try {
-      const { questions: q } = await generate({
+      const { questions: q, notFound } = await generate({
         data: { topic: clean, difficulty, mode, count: 5 },
       });
+      if (notFound) {
+        setError(
+          "Sorry, I searched the entire multiverse and couldn't find that! But try your best with another topic.",
+        );
+        setPhase("config");
+        return;
+      }
       if (!q.length) throw new Error("The AI returned no questions — try rephrasing your topic.");
       const usable =
         mode === "mcq"
