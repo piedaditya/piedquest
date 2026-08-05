@@ -57,7 +57,9 @@ ${modeLine}
 Every question must be factually accurate and include a short, educational explanation (1-2 sentences).
 
 Return ONLY JSON in this exact shape:
-{"questions":[{"question_text":"...","options":["a","b","c","d"],"correct_answer":"exact text of the correct option","acceptable_answers":["..."],"explanation":"..."}]}`;
+{"questions":[{"question_text":"...","options":["a","b","c","d"],"correct_answer":"exact text of the correct option","acceptable_answers":["..."],"fun_fact":"a short insightful fun fact explaining the answer"}]}
+
+If the topic is gibberish or does not exist in recorded human knowledge, return ONLY {"error":"TOPIC_NOT_FOUND"}.`;
 }
 
 export function parseQuest(raw: string): GeneratedQuestion[] {
