@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          client_key: string
+          created_at: string
+          feature: string
+          id: string
+          request_count: number
+          updated_at: string
+          usage_date: string
+        }
+        Insert: {
+          client_key: string
+          created_at?: string
+          feature: string
+          id?: string
+          request_count?: number
+          updated_at?: string
+          usage_date?: string
+        }
+        Update: {
+          client_key?: string
+          created_at?: string
+          feature?: string
+          id?: string
+          request_count?: number
+          updated_at?: string
+          usage_date?: string
+        }
+        Relationships: []
+      }
       daily_leaderboard: {
         Row: {
           created_at: string
@@ -127,7 +157,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      consume_ai_budget: {
+        Args: { _client_key: string; _feature: string; _limit: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -12,6 +12,8 @@ const InputSchema = z.object({
 export const generateAiQuestions = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
+    const { enforceAiBudget } = await import("./ai-rate-limit.server");
+    await enforceAiBudget("practice_questions");
     const count = Math.min(Math.max(data.count, 1), 5);
     const questions = await generateQuestions({
       category: data.category,
