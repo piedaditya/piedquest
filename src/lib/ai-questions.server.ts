@@ -26,6 +26,10 @@ export function buildPrompt(
     : "";
   return `Generate ${count} highly educational, difficult multiple-choice trivia questions about ${scope}. Each must have exactly 4 options with exactly one correct answer, plus a short educational explanation (1-2 sentences).
 
+LENGTH RULE (critical): every question_text must be 20-25 words MAX, readable in under 4 seconds. No dense historical background, no long parenthetical native terms, no lore setup before the question. Difficulty must come from the answer, not from long text.
+BAD: "In the Silla Kingdom's Bone-Rank System (Golpum-je), aristocrats of the 'Head Rank 6' (Yuk-dupum) were barred from the top five bureaucratic ranks regardless of talent. What was the highest official rank (Gwanpum) they could attain?"
+GOOD: "In ancient Korea's Silla Kingdom, what was the highest official rank a 'Head Rank 6' aristocrat could attain?"
+
 Return output strictly as JSON with this shape:
 {"questions":[{"question_text":"...","options":["a","b","c","d"],"correct_answer":"exact text of the correct option","explanation":"..."}]}${avoid}`;
 }
