@@ -49,30 +49,8 @@ export async function fetchMyDailyRun(
   return (data as DailyRunRow | null) ?? null;
 }
 
-export async function submitDailyRun(params: {
-  score: number;
-  timeMs: number;
-  tabSwitches: number;
-  disqualified: boolean;
-  quizDate?: string;
-}): Promise<void> {
-  const user_id = getClientId();
-  const username = getUsername();
-  if (!user_id) return;
-  const { error } = await supabase.from("daily_leaderboard").upsert(
-    {
-      user_id,
-      username,
-      quiz_date: params.quizDate ?? getLocalDateString(),
-      score: Math.max(0, Math.min(15, Math.round(params.score))),
-      time_ms: Math.max(0, Math.min(86_400_000, Math.round(params.timeMs))),
-      tab_switches: Math.max(0, Math.min(1000, params.tabSwitches)),
-      disqualified: params.disqualified,
-    },
-    { onConflict: "user_id,quiz_date" },
-  );
-  if (error) console.error("daily leaderboard submit failed", error);
-}
+// Daily runs are written server-side after answer verification
+// (see src/lib/leaderboard.functions.ts).
 
 /** 01:42.350 */
 export function formatMs(ms: number): string {
