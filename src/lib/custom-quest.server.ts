@@ -12,8 +12,26 @@ export interface GeneratedQuestion {
   explanation: string;
 }
 
+export interface QuestResult {
+  questions: GeneratedQuestion[];
+  notFound: boolean;
+}
+
+export const TOPIC_NOT_FOUND_MESSAGE =
+  "Sorry, I searched the entire multiverse and couldn't find that! But try your best with another topic.";
+
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-3.6-flash";
+const MODEL = "google/gemini-2.5-flash";
+
+const SYSTEM_PROMPT = `You are an elite, highly accurate trivia master. The user will give you a topic and a difficulty level.
+
+ACCURACY: If the topic is a real-world academic subject, you must use the most up-to-date curriculum. For example, if asked about NCERT Class 12 Biology Chapter 1 updated syllabus, you must know that the old "Reproduction in Organisms" chapter was completely deleted, and you must generate questions on the new Chapter 1: "Sexual Reproduction in Flowering Plants".
+
+DIFFICULTY SCALING: If the user selects "Hard" or "Extreme", the multiple-choice options MUST be incredibly tricky. They should look highly similar to the correct answer to genuinely test the user's deep knowledge (e.g. mixing up flint and steel vs. obsidian and steel for Minecraft).
+
+FALLBACK PROTOCOL: If the user types complete gibberish or a topic that does not exist in recorded human knowledge, do NOT make things up. Return exactly {"error":"TOPIC_NOT_FOUND"} and nothing else.
+
+You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, original and never trivially guessable.`;
 
 const DIFFICULTY_HINT: Record<Difficulty, string> = {
   Easy: "simple one-line questions a beginner can answer",
@@ -64,6 +82,7 @@ export function parseQuest(raw: string): GeneratedQuestion[] {
       : [];
     const answer = typeof q["correct_answer"] === "string" ? q["correct_answer"] : "";
     const explanation = typeof q["explanation"] === "string" ? q["explanation"] : "";
+    const funFact = typeof q["fun_fact"] === "string" ? q["fun_fact"] : "";
     const acceptable = Array.isArray(q["acceptable_answers"])
       ? (q["acceptable_answers"] as unknown[]).filter((o): o is string => typeof o === "string")
       : [];
@@ -79,10 +98,22 @@ export function parseQuest(raw: string): GeneratedQuestion[] {
       correctIndex: correctIndex < 0 ? 0 : correctIndex,
       answerText: choices[correctIndex] ?? answer,
       acceptable: Array.from(new Set([answer, ...acceptable])),
-      explanation,
+      explanation: explanation || funFact,
     });
   }
   return out;
+}
+
+export function isTopicNotFound(raw: string): boolean {
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start === -1 || end === -1) return false;
+  try {
+    const payload = JSON.parse(raw.slice(start, end + 1)) as { error?: unknown };
+    return typeof payload.error === "string" && payload.error.toUpperCase().includes("TOPIC_NOT_FOUND");
+  } catch {
+    return false;
+  }
 }
 
 export async function generateCustomQuest(args: {
@@ -90,7 +121,7 @@ export async function generateCustomQuest(args: {
   difficulty: Difficulty;
   mode: AnswerMode;
   count: number;
-}): Promise<GeneratedQuestion[]> {
+}): Promise<QuestResult> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured");
 
@@ -101,11 +132,7 @@ export async function generateCustomQuest(args: {
       model: MODEL,
       response_format: { type: "json_object" },
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a master quiz designer. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, original and never trivially guessable.",
-        },
+        { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: buildQuestPrompt(args) },
       ],
     }),
@@ -123,5 +150,7 @@ export async function generateCustomQuest(args: {
   const data = (await response.json()) as {
     choices?: { message?: { content?: string } }[];
   };
-  return parseQuest(data.choices?.[0]?.message?.content ?? "");
+  const content = data.choices?.[0]?.message?.content ?? "";
+  if (isTopicNotFound(content)) return { questions: [], notFound: true };
+  return { questions: parseQuest(content), notFound: false };
 }
