@@ -4,6 +4,7 @@ export interface QuizStorage {
   lastPlayedDate: string | null; // YYYY-MM-DD (local)
   lastScore: number | null;
   lastPattern: boolean[] | null;
+  lastAnswers: (string | null)[] | null;
   lastQuizNumber: number | null;
   lastTimedOut: boolean;
   lastTimeMs: number | null;
@@ -22,6 +23,7 @@ const defaultState: QuizStorage = {
   lastPlayedDate: null,
   lastScore: null,
   lastPattern: null,
+  lastAnswers: null,
   lastQuizNumber: null,
   lastTimedOut: false,
   lastTimeMs: null,
@@ -69,6 +71,7 @@ export function writeStorage(state: QuizStorage): void {
 export function recordCompletion(params: {
   score: number;
   pattern: boolean[];
+  answers?: (string | null)[];
   quizNumber: number;
   timedOut?: boolean;
   timeMs?: number;
@@ -92,6 +95,7 @@ export function recordCompletion(params: {
     lastPlayedDate: today,
     lastScore: params.score,
     lastPattern: params.pattern,
+    lastAnswers: params.answers ?? null,
     lastQuizNumber: params.quizNumber,
     lastTimedOut: params.timedOut ?? false,
     lastTimeMs: params.timeMs ?? null,
