@@ -12,6 +12,6 @@ const InputSchema = z.object({
 export const generateMyQuest = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const questions = await generateCustomQuest(data);
-    return { questions };
+    const { questions, notFound } = await generateCustomQuest(data);
+    return { questions, notFound };
   });
