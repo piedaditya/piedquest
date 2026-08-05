@@ -1,7 +1,7 @@
 // Direct Google Gemini API caller. Used when a GEMINI_API_KEY secret is set,
 // so AI features keep working independently of the Lovable AI gateway credits.
 const ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
 export function hasGeminiKey(): boolean {
   return Boolean(process.env["GEMINI_API_KEY"]);
