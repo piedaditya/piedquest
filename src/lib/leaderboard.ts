@@ -83,25 +83,5 @@ export async function fetchTopByStreak(limit = 10): Promise<LeaderboardRow[]> {
   return (data ?? []) as LeaderboardRow[];
 }
 
-export async function upsertLeaderboardEntry(params: {
-  streak: number;
-  xp: number;
-  score: number;
-}): Promise<void> {
-  const client_id = getClientId();
-  const username = getUsername();
-  if (!client_id) return;
-  const { error } = await supabase
-    .from("leaderboard")
-    .upsert(
-      {
-        client_id,
-        username,
-        streak: params.streak,
-        xp: params.xp,
-        score: params.score,
-      },
-      { onConflict: "client_id" },
-    );
-  if (error) console.error("leaderboard upsert failed", error);
-}
+// Leaderboard writes are server-only (see leaderboard.functions.ts): the
+// client cannot write scores, streaks or XP directly.
