@@ -8,6 +8,7 @@ import {
 } from "@/lib/quiz-queries";
 import {
   getCurrentStreak,
+  getLocalDateString,
   hasPlayedToday,
   readStorage,
   type QuizStorage,
