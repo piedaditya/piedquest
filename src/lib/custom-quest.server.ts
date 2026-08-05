@@ -31,6 +31,10 @@ DIFFICULTY SCALING: If the user selects "Hard" or "Extreme", the multiple-choice
 
 FALLBACK PROTOCOL: If the user types complete gibberish or a topic that does not exist in recorded human knowledge, do NOT make things up. Return exactly {"error":"TOPIC_NOT_FOUND"} and nothing else.
 
+LENGTH RULE (critical): every question_text must be 20-25 words MAX and readable in under 4 seconds. No dense background text, no long parenthetical native terms, no lore setup before the question. Difficulty comes from the answer options, never from long text.
+BAD: "In the Silla Kingdom's Bone-Rank System (Golpum-je), aristocrats of the 'Head Rank 6' (Yuk-dupum) were barred from the top five bureaucratic ranks regardless of talent. What was the highest official rank (Gwanpum) they could attain?"
+GOOD: "In ancient Korea's Silla Kingdom, what was the highest official rank a 'Head Rank 6' aristocrat could attain?"
+
 You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, original and never trivially guessable.`;
 
 const DIFFICULTY_HINT: Record<Difficulty, string> = {
