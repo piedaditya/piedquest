@@ -71,6 +71,17 @@ export async function generateQuestions(args: {
   count: number;
   asked: string[];
 }): Promise<AiQuestion[]> {
+  const { hasGeminiKey, callGemini } = await import("./gemini.server");
+  if (hasGeminiKey()) {
+    const text = await callGemini({
+      system:
+        "You are a trivia master. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, never repeated, and 20-25 words MAX.",
+      prompt: buildPrompt(args.category, args.region, args.count, args.asked),
+      json: true,
+    });
+    return parseAiQuestions(text);
+  }
+
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured");
 
