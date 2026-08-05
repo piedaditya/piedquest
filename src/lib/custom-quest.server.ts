@@ -128,6 +128,17 @@ export async function generateCustomQuest(args: {
   mode: AnswerMode;
   count: number;
 }): Promise<QuestResult> {
+  const { hasGeminiKey, callGemini } = await import("./gemini.server");
+  if (hasGeminiKey()) {
+    const text = await callGemini({
+      system: SYSTEM_PROMPT,
+      prompt: buildQuestPrompt(args),
+      json: true,
+    });
+    if (isTopicNotFound(text)) return { questions: [], notFound: true };
+    return { questions: parseQuest(text), notFound: false };
+  }
+
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured");
 
