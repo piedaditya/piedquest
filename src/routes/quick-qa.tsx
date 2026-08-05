@@ -43,7 +43,11 @@ function QuickQaRoute() {
     setAnswer(null);
     try {
       const res = await ask({ data: { question: q } });
-      setAnswer(res.answer);
+      if (res.ok) {
+        setAnswer(res.answer);
+      } else {
+        setError(res.error);
+      }
     } catch {
       setError("Couldn't fetch an answer right now. Please try again in a moment.");
     } finally {
