@@ -57,11 +57,12 @@ function QuizContainer() {
   return (
     <Playing
       quiz={data}
-      onComplete={({ pattern, timeMs, tabSwitches, disqualified }) => {
+      onComplete={({ pattern, answers, timeMs, tabSwitches, disqualified }) => {
         const score = disqualified ? 0 : pattern.filter(Boolean).length;
         recordCompletion({
           score,
           pattern,
+          answers,
           quizNumber: data.quizNumber,
           timedOut: false,
           timeMs,
