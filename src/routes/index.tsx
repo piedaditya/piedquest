@@ -185,11 +185,11 @@ function Landing({
 
         {playedToday && <NextQuestCountdown />}
 
-        <PracticeCard fandom={activeFandom} />
+        <MyQuestsPromo />
+
+        <QuickQaPromo />
 
         <LeaderboardTeaser />
-
-        <QuickQaTeaser />
 
         <section
           className="mt-14 rounded-3xl border border-border p-5"
@@ -485,14 +485,14 @@ function RegionSelector({
   );
 }
 
-function PracticeCard({ fandom }: { fandom: string }) {
+function MyQuestsPromo() {
   return (
     <section
       className="mt-8 rounded-3xl border border-border p-6"
       style={{
         background:
           "linear-gradient(160deg, oklch(0.28 0.12 305 / 0.35), oklch(0.19 0.035 285 / 0.7))",
-        boxShadow: "var(--shadow-card)",
+        boxShadow: "0 0 46px -20px oklch(0.55 0.22 305 / 0.9), var(--shadow-card)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -501,34 +501,33 @@ function PracticeCard({ fandom }: { fandom: string }) {
         </div>
         <div>
           <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
-            Custom Quests
+            ⚡ My Own Quests
           </p>
-          <p className="font-display text-xl text-foreground">Selectable Fandom Mode</p>
+          <p className="font-display text-xl text-foreground">AI-forged custom quizzes</p>
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
-        Launch an unlimited 5-question challenge from <span className="text-primary">{fandom}</span>.
-        Doesn't affect your streak — but every correct answer still earns +10 XP.
+        Generate custom quizzes on any topic in the world!
       </p>
       <Link
-        to="/practice"
+        to="/my-quests"
         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 px-5 py-3.5 font-display text-base text-primary transition-all hover:bg-primary/20"
       >
-        Start Custom Quest
+        Create My Quest
         <ArrowUpRight className="h-4 w-4" />
       </Link>
     </section>
   );
 }
 
-function QuickQaTeaser() {
+function QuickQaPromo() {
   return (
     <section
       className="mt-8 rounded-3xl border border-border p-6"
       style={{
         background:
           "linear-gradient(160deg, oklch(0.28 0.15 122 / 0.12), oklch(0.19 0.035 285 / 0.7))",
-        boxShadow: "var(--shadow-card)",
+        boxShadow: "0 0 46px -20px oklch(0.92 0.22 122 / 0.7), var(--shadow-card)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -537,17 +536,17 @@ function QuickQaTeaser() {
         </div>
         <div>
           <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
-            Quick Q&amp;A
+            💡 Quick Q&amp;A
           </p>
-          <p className="font-display text-xl text-foreground">Ask anything, fast</p>
+          <p className="font-display text-xl text-foreground">Instant AI answers</p>
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">
-        Type a question and get a short, crystal-clear AI answer — no long paragraphs.
+        Ask anything and get short, straight answers!
       </p>
       <Link
         to="/quick-qa"
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card px-5 py-3.5 font-display text-base text-foreground transition-all hover:border-accent/40 hover:bg-accent/5"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 px-5 py-3.5 font-display text-base text-primary transition-all hover:bg-primary/20"
       >
         Open Quick Q&amp;A
         <ArrowUpRight className="h-4 w-4" />
