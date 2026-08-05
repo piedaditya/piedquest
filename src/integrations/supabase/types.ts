@@ -89,65 +89,6 @@ export type Database = {
         }
         Relationships: []
       }
-      doubt_messages: {
-        Row: {
-          client_id: string
-          content: string
-          created_at: string
-          id: string
-          role: string
-          thread_id: string
-        }
-        Insert: {
-          client_id: string
-          content: string
-          created_at?: string
-          id?: string
-          role: string
-          thread_id: string
-        }
-        Update: {
-          client_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          role?: string
-          thread_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "doubt_messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "doubt_threads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      doubt_threads: {
-        Row: {
-          client_id: string
-          created_at: string
-          id: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          created_at?: string
-          id?: string
-          title?: string
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          created_at?: string
-          id?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       leaderboard: {
         Row: {
           client_id: string

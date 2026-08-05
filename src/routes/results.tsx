@@ -8,12 +8,14 @@ import {
 } from "@/lib/quiz-queries";
 import {
   getCurrentStreak,
+  getLocalDateString,
   hasPlayedToday,
   readStorage,
   type QuizStorage,
 } from "@/lib/quiz-storage";
-import { upsertLeaderboardEntry } from "@/lib/leaderboard";
-import { formatMs, submitDailyRun } from "@/lib/daily-leaderboard";
+import { getClientId, getUsername } from "@/lib/leaderboard";
+import { formatMs } from "@/lib/daily-leaderboard";
+import { submitDailyResult } from "@/lib/leaderboard.functions";
 import {
   BgGlow,
   FullBleed,
@@ -61,17 +63,21 @@ function ResultsContainer() {
   useEffect(() => {
     const s = readStorage();
     if (s.lastScore == null) return;
-    void upsertLeaderboardEntry({
-      streak: getCurrentStreak(s),
-      xp: s.xp,
-      score: Math.min(5, s.lastScore),
-    });
-    void submitDailyRun({
-      score: s.lastScore,
-      timeMs: s.lastTimeMs ?? 0,
-      tabSwitches: s.lastTabSwitches,
-      disqualified: s.lastDisqualified,
-    });
+    const clientId = getClientId();
+    if (!clientId) return;
+    // Scores are verified and written server-side; the client only reports the
+    // answers it picked.
+    void submitDailyResult({
+      data: {
+        clientId,
+        username: getUsername(),
+        quizDate: s.lastPlayedDate ?? getLocalDateString(),
+        answers: s.lastAnswers ?? [],
+        timeMs: s.lastTimeMs ?? 0,
+        tabSwitches: s.lastTabSwitches,
+        disqualified: s.lastDisqualified,
+      },
+    }).catch(() => undefined);
   }, []);
 
   if (!data) {

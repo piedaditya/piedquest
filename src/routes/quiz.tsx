@@ -57,11 +57,12 @@ function QuizContainer() {
   return (
     <Playing
       quiz={data}
-      onComplete={({ pattern, timeMs, tabSwitches, disqualified }) => {
+      onComplete={({ pattern, answers, timeMs, tabSwitches, disqualified }) => {
         const score = disqualified ? 0 : pattern.filter(Boolean).length;
         recordCompletion({
           score,
           pattern,
+          answers,
           quizNumber: data.quizNumber,
           timedOut: false,
           timeMs,
@@ -88,6 +89,7 @@ function Playing({
   quiz: DailyQuiz;
   onComplete: (r: {
     pattern: boolean[];
+    answers: (string | null)[];
     timeMs: number;
     tabSwitches: number;
     disqualified: boolean;
@@ -97,6 +99,7 @@ function Playing({
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [pattern, setPattern] = useState<boolean[]>([]);
+  const [answers, setAnswers] = useState<(string | null)[]>([]);
   const [visible, setVisible] = useState(true);
   const [finished, setFinished] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -105,6 +108,8 @@ function Playing({
   const startRef = useRef<number>(0);
   const patternRef = useRef(pattern);
   patternRef.current = pattern;
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
   const finishedRef = useRef(false);
 
   const total = quiz.questions.length;
@@ -122,6 +127,7 @@ function Playing({
     setFinished(true);
     onComplete({
       pattern: patternRef.current,
+      answers: answersRef.current,
       timeMs: performance.now() - startRef.current + TAB_SWITCH_PENALTY_MS,
       tabSwitches: 2,
       disqualified: true,
@@ -144,6 +150,7 @@ function Playing({
     setLocked(true);
     const isCorrect = i === q.correctIndex;
     setPattern((p) => [...p, isCorrect]);
+    setAnswers((a) => [...a, q.choices[i] ?? null]);
     if (!isCorrect) addWrongId(q.id);
   };
 
@@ -155,6 +162,7 @@ function Playing({
       setFinished(true);
       onComplete({
         pattern: nextPattern,
+        answers: answersRef.current,
         timeMs: performance.now() - startRef.current + anti.penaltyMs,
         tabSwitches: anti.switches,
         disqualified: false,
