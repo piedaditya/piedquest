@@ -12,6 +12,8 @@ const InputSchema = z.object({
 export const generateMyQuest = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
+    const { enforceAiBudget } = await import("./ai-rate-limit.server");
+    await enforceAiBudget("custom_quest");
     const { questions, notFound } = await generateCustomQuest(data);
     return { questions, notFound };
   });
