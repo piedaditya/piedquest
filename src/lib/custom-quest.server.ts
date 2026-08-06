@@ -136,6 +136,7 @@ export async function generateCustomQuest(args: {
   difficulty: Difficulty;
   mode: AnswerMode;
   count: number;
+  avoid?: string[];
 }): Promise<QuestResult> {
   const { hasGeminiKey, callGemini } = await import("./gemini.server");
   if (hasGeminiKey()) {
