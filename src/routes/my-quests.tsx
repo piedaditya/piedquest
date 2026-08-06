@@ -32,18 +32,16 @@ const DIFFICULTIES: { key: Difficulty; blurb: string }[] = [
   { key: "Extreme", blurb: "Competitive-level" },
 ];
 
-const TIMERS = [
-  { value: 30, label: "30 seconds" },
-  { value: 60, label: "60 seconds" },
-  { value: 120, label: "120 seconds" },
-  { value: 0, label: "No timer" },
-];
+const PER_QUESTION_TIMERS = [15, 30, 60, 120];
+const COUNT_PRESETS = [5, 10, 25, 50, 100, 200];
+const BATCH_SIZE = 20;
+const SINGLE_CALL_MAX = 25;
 
 const SUGGESTIONS = [
-  "GTA V lore",
-  "Class 12 Biology — Sexual Reproduction in Flowering Plants",
-  "Basic Python coding",
-  "Formula 1 history",
+  "Class 12 Bio (Full Syllabus)",
+  "NEET Chemistry",
+  "Formula 1 History",
+  "GTA V Lore",
 ];
 
 export const Route = createFileRoute("/my-quests")({
