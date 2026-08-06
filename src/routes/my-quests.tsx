@@ -451,7 +451,18 @@ function ModeCard({
   );
 }
 
-function BoomLoader({ topic, difficulty }: { topic: string; difficulty: Difficulty }) {
+function BoomLoader({
+  topic,
+  difficulty,
+  done,
+  target,
+}: {
+  topic: string;
+  difficulty: Difficulty;
+  done: number;
+  target: number;
+}) {
+  const pct = Math.max(4, Math.min(100, (done / Math.max(1, target)) * 100));
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <BgGlow />
@@ -464,12 +475,20 @@ function BoomLoader({ topic, difficulty }: { topic: string; difficulty: Difficul
           >
             BOOOM!
           </h2>
-          <p className="font-display mt-4 text-2xl text-foreground">Forging your quest…</p>
+          <p className="font-display mt-4 text-2xl text-foreground">
+            Forging Question Bank… [{done}/{target} Generated]
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
             {difficulty} · {topic.trim() || "your topic"}
           </p>
         </div>
-        <div className="mt-14 space-y-3">
+        <div className="mt-10 h-3 w-full overflow-hidden rounded-full border border-primary/25 bg-primary/5">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${pct}%`, background: "var(--primary)", boxShadow: "0 0 18px var(--primary)" }}
+          />
+        </div>
+        <div className="mt-8 space-y-3">
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}
