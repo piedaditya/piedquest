@@ -566,6 +566,18 @@ function QuestPlayer({
     return () => clearTimeout(t);
   }, [left, seconds, locked, done, advance]);
 
+  // Total exam countdown — ends the whole test at zero.
+  useEffect(() => {
+    if (!totalSeconds || done) return;
+    if (examLeft <= 0) {
+      recordPractice(pattern.filter(Boolean).length);
+      setDone(true);
+      return;
+    }
+    const t = setTimeout(() => setExamLeft((v) => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [examLeft, totalSeconds, done, pattern]);
+
   useEffect(() => {
     if (mode === "typing" && !locked) inputRef.current?.focus();
   }, [index, mode, locked]);
