@@ -51,15 +51,22 @@ export function buildQuestPrompt(args: {
   difficulty: Difficulty;
   mode: AnswerMode;
   count: number;
+  avoid?: string[];
 }): string {
   const modeLine =
     args.mode === "typing"
       ? `Answers will be TYPED by the user, so "correct_answer" must be a short word or phrase (1-4 words, no punctuation). Also give "acceptable_answers": an array of 2-4 alternative spellings/abbreviations that should count as correct.`
       : `Provide exactly 4 plausible options, only one correct.`;
 
+  const avoidLine =
+    args.avoid && args.avoid.length
+      ? `\nDo NOT repeat or rephrase any of these already-generated questions:\n- ${args.avoid.slice(-40).join("\n- ")}\n`
+      : "";
+
   return `Create ${args.count} original multiple-choice trivia questions about: "${args.topic}".
 Difficulty: ${args.difficulty} — ${DIFFICULTY_HINT[args.difficulty]}.
 ${modeLine}
+${avoidLine}
 Every question must be factually accurate and include a short, educational explanation (1-2 sentences).
 
 Return ONLY JSON in this exact shape:
