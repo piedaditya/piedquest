@@ -5,7 +5,7 @@ import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 
 export const AI_DAILY_LIMITS = {
   practice_questions: 120,
-  custom_quest: 40,
+  custom_quest: 300,
   quick_qa: 60,
 } as const;
 
