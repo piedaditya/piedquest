@@ -678,6 +678,28 @@ function QuestPlayer({
           </div>
         )}
 
+        {totalSeconds > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" /> Exam time left
+              </span>
+              <span className={examLeft <= 30 ? "text-destructive" : "text-accent"}>
+                {Math.floor(examLeft / 60)}:{String(examLeft % 60).padStart(2, "0")}
+              </span>
+            </div>
+            <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border">
+              <div
+                className="h-full rounded-full transition-all duration-1000 ease-linear"
+                style={{
+                  width: `${Math.max(0, Math.min(100, (examLeft / totalSeconds) * 100))}%`,
+                  background: examLeft <= 30 ? "var(--destructive)" : "oklch(0.55 0.22 305)",
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="mt-8 flex-1" key={index}>
           <p className="font-display text-xs uppercase tracking-[0.25em] text-accent">
             {topic}
