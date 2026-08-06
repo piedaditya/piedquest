@@ -506,6 +506,7 @@ function QuestPlayer({
   questions,
   mode,
   seconds,
+  totalSeconds,
   topic,
   onExit,
   onReplay,
@@ -513,6 +514,7 @@ function QuestPlayer({
   questions: GeneratedQuestion[];
   mode: AnswerMode;
   seconds: number;
+  totalSeconds: number;
   topic: string;
   onExit: () => void;
   onReplay: () => void;
@@ -525,6 +527,7 @@ function QuestPlayer({
   const [pattern, setPattern] = useState<boolean[]>([]);
   const [done, setDone] = useState(false);
   const [left, setLeft] = useState(seconds);
+  const [examLeft, setExamLeft] = useState(totalSeconds);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const total = questions.length;
