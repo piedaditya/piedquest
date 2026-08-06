@@ -80,11 +80,25 @@ function MyQuestsRoute() {
   const [phase, setPhase] = useState<Phase>("config");
   const [topic, setTopic] = useState("");
   const [difficulty, setDifficulty] = useState<Difficulty>("Normal");
+  const [count, setCount] = useState(5);
+  const [timerType, setTimerType] = useState<"per" | "total">("per");
   const [seconds, setSeconds] = useState(60);
+  const [totalMinutes, setTotalMinutes] = useState(30);
   const [mode, setMode] = useState<AnswerMode>("mcq");
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const generate = useServerFn(generateMyQuest);
+
+  const prepare = (list: GeneratedQuestion[]) =>
+    mode === "mcq"
+      ? list
+          .filter((x) => x.choices.length === 4)
+          .map((x) => {
+            const shuffled = shuffleOptions(x);
+            return { ...shuffled, answerText: shuffled.choices[shuffled.correctIndex] };
+          })
+      : list;
 
   const launch = async () => {
     const clean = topic.trim();
@@ -92,30 +106,48 @@ function MyQuestsRoute() {
       setError("Give your quest a topic first.");
       return;
     }
+    const target = Math.max(1, Math.min(200, Math.round(count) || 5));
     setError(null);
+    setProgress(0);
     setPhase("loading");
     try {
-      const { questions: q, notFound } = await generate({
-        data: { topic: clean, difficulty, mode, count: 5 },
-      });
-      if (notFound) {
-        setError(
-          "Sorry, I searched the entire multiverse and couldn't find that! But try your best with another topic.",
-        );
-        setPhase("config");
-        return;
+      const collected: GeneratedQuestion[] = [];
+      // <=25 questions is one direct call; anything larger is split into
+      // sequential batches so no single response blows the output token cap.
+      const batches: number[] = [];
+      if (target <= SINGLE_CALL_MAX) batches.push(target);
+      else {
+        let left = target;
+        while (left > 0) {
+          batches.push(Math.min(BATCH_SIZE, left));
+          left -= BATCH_SIZE;
+        }
       }
-      if (!q.length) throw new Error("The AI returned no questions — try rephrasing your topic.");
-      const usable =
-        mode === "mcq"
-          ? q
-              .filter((x) => x.choices.length === 4)
-              .map((x) => {
-                const shuffled = shuffleOptions(x);
-                return { ...shuffled, answerText: shuffled.choices[shuffled.correctIndex] };
-              })
-          : q;
-      if (!usable.length) throw new Error("The AI returned no usable questions — try again.");
+
+      for (const size of batches) {
+        const { questions: q, notFound } = await generate({
+          data: {
+            topic: clean,
+            difficulty,
+            mode,
+            count: size,
+            avoid: collected.slice(-40).map((x) => x.question),
+          },
+        });
+        if (notFound && !collected.length) {
+          setError(
+            "Sorry, I searched the entire multiverse and couldn't find that! But try your best with another topic.",
+          );
+          setPhase("config");
+          return;
+        }
+        collected.push(...q);
+        setProgress(Math.min(target, collected.length));
+      }
+
+      const usable = prepare(collected).slice(0, target);
+      if (!usable.length)
+        throw new Error("The AI returned no usable questions — try rephrasing your topic.");
       setQuestions(usable);
       setPhase("play");
     } catch (e) {
@@ -124,14 +156,23 @@ function MyQuestsRoute() {
     }
   };
 
-  if (phase === "loading") return <BoomLoader topic={topic} difficulty={difficulty} />;
+  if (phase === "loading")
+    return (
+      <BoomLoader
+        topic={topic}
+        difficulty={difficulty}
+        done={progress}
+        target={Math.max(1, Math.min(200, Math.round(count) || 5))}
+      />
+    );
 
   if (phase === "play")
     return (
       <QuestPlayer
         questions={questions}
         mode={mode}
-        seconds={seconds}
+        seconds={timerType === "per" ? seconds : 0}
+        totalSeconds={timerType === "total" ? Math.max(0, totalMinutes) * 60 : 0}
         topic={topic.trim()}
         onExit={() => setPhase("config")}
         onReplay={() => void launch()}
@@ -154,21 +195,21 @@ function MyQuestsRoute() {
             <Wand2 className="h-3.5 w-3.5" /> My Own Quests
           </span>
           <h1 className="font-display mt-5 text-4xl leading-[1.05] text-foreground sm:text-5xl">
-            Command the AI. <span className="text-primary">Forge any quiz.</span>
+            Command the AI. <span className="text-primary">Build any exam.</span>
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Anything from game lore to your Class 12 Biology chapter — tuned to your
-            difficulty, timer and answer style.
+            From game lore to a full Class 12 syllabus — up to 200 questions with the
+            timer style you want.
           </p>
         </div>
 
         {/* Topic */}
-        <Section label="Topic" icon={<Sparkles className="h-3.5 w-3.5" />}>
+        <Section label="Topic or Full Syllabus" icon={<Sparkles className="h-3.5 w-3.5" />}>
           <input
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             maxLength={200}
-            placeholder="e.g. GTA V lore, Python basics, Mughal Empire…"
+            placeholder="e.g., Class 12 Bio (Full Syllabus), JEE Main Physics, GTA V Lore, Python Basics..."
             className="w-full rounded-2xl border border-border bg-card px-4 py-4 text-base text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/60"
             style={{ boxShadow: "0 0 40px -24px var(--primary)" }}
           />
@@ -183,6 +224,48 @@ function MyQuestsRoute() {
               </button>
             ))}
           </div>
+        </Section>
+
+        {/* Question count */}
+        <Section label="Number of questions" icon={<ListChecks className="h-3.5 w-3.5" />}>
+          <div className="flex flex-wrap gap-2">
+            {COUNT_PRESETS.map((n) => {
+              const active = count === n;
+              return (
+                <button
+                  key={n}
+                  onClick={() => setCount(n)}
+                  className={`font-display min-w-14 rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-foreground hover:border-primary/40"
+                  }`}
+                  style={active ? { boxShadow: "0 0 30px -14px var(--primary)" } : undefined}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+          <label className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+            <span className="text-xs text-muted-foreground">Custom (1–200)</span>
+            <input
+              type="number"
+              min={1}
+              max={200}
+              value={count}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setCount(Number.isNaN(v) ? 1 : Math.max(1, Math.min(200, Math.round(v))));
+              }}
+              className="font-display w-24 rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-none focus:border-primary/60"
+            />
+          </label>
+          {count > SINGLE_CALL_MAX && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Large bank — generated in {Math.ceil(count / BATCH_SIZE)} fast batches.
+            </p>
+          )}
         </Section>
 
         {/* Difficulty */}
@@ -212,21 +295,71 @@ function MyQuestsRoute() {
         </Section>
 
         {/* Timer */}
-        <Section label="Time per question" icon={<Clock className="h-3.5 w-3.5" />}>
-          <div className="relative">
-            <select
-              value={seconds}
-              onChange={(e) => setSeconds(Number(e.target.value))}
-              className="w-full appearance-none rounded-2xl border border-border bg-card px-4 py-4 font-display text-base text-foreground outline-none focus:border-accent/60"
-            >
-              {TIMERS.map((t) => (
-                <option key={t.value} value={t.value} className="bg-card">
-                  {t.label}
-                </option>
-              ))}
-            </select>
-            <ArrowUpRight className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rotate-135 text-accent" />
+        <Section label="Timer" icon={<Clock className="h-3.5 w-3.5" />}>
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-1.5">
+            {(["per", "total"] as const).map((t) => {
+              const active = timerType === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTimerType(t)}
+                  className={`font-display rounded-xl px-3 py-2.5 text-sm transition-all ${
+                    active ? "bg-accent/15 text-accent" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t === "per" ? "Per-Question" : "Total Exam"}
+                </button>
+              );
+            })}
           </div>
+
+          {timerType === "per" ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {PER_QUESTION_TIMERS.map((s) => {
+                const active = seconds === s;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setSeconds(s)}
+                    className={`font-display rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                      active
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border bg-card text-foreground hover:border-accent/40"
+                    }`}
+                  >
+                    {s}s
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setSeconds(0)}
+                className={`font-display rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                  seconds === 0
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-border bg-card text-foreground hover:border-accent/40"
+                }`}
+              >
+                No timer
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+              <input
+                type="number"
+                min={0}
+                max={200}
+                value={totalMinutes}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setTotalMinutes(Number.isNaN(v) ? 0 : Math.max(0, Math.min(200, Math.round(v))));
+                }}
+                className="font-display w-24 rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-none focus:border-accent/60"
+              />
+              <span className="text-xs text-muted-foreground">
+                minutes total {totalMinutes === 0 ? "(no timer)" : "· 1–200"}
+              </span>
+            </div>
+          )}
         </Section>
 
         {/* Answer mode */}
@@ -261,7 +394,7 @@ function MyQuestsRoute() {
           style={{ boxShadow: "var(--shadow-glow)" }}
         >
           <Wand2 className="h-5 w-5" />
-          Generate My Quest
+          Generate Quest · {count} Q
         </button>
       </div>
     </div>
