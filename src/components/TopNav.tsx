@@ -1,3 +1,5 @@
+import HeartsSystem from "@/components/HeartsSystem";
+
 import { Link } from "@tanstack/react-router";
 import { Home, Lightbulb, Trophy, Zap } from "lucide-react";
 
@@ -9,8 +11,10 @@ const ITEMS = [
 ] as const;
 
 export function TopNav() {
-  return (
-    <nav
+    return (
+    <>
+      <nav
+
       className="sticky top-0 z-50 w-full border-b border-border/70 backdrop-blur-xl"
       style={{ background: "oklch(0.16 0.03 285 / 0.82)" }}
       aria-label="Primary"
@@ -32,6 +36,11 @@ export function TopNav() {
           </Link>
         ))}
       </div>
-    </nav>
+          </nav>
+      <div className="mt-6 px-4">
+        <HeartsSystem />
+      </div>
+    </>
   );
+
 }
