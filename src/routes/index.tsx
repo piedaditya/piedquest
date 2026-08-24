@@ -665,7 +665,7 @@ function LoopCard({
       </div>
       <h3 className="font-display mt-8 text-2xl text-foreground">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{children}</p>
-    <QuestSummary/>
+      <QuestSummary/>
     </div>
   );
 }
