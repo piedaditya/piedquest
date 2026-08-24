@@ -4,23 +4,26 @@ import { Heart } from "lucide-react";
 export default function HeartsSystem() {
   const MAX_HEARTS = 5;
   
-  // Load saved hearts from local storage so it persists on page refresh
+  // Safely load hearts by checking if we are in the browser
   const [hearts, setHearts] = useState(() => {
-    const saved = localStorage.getItem("piedquest_hearts");
-    return saved !== null ? parseInt(saved, 10) : MAX_HEARTS;
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("piedquest_hearts");
+      return saved !== null ? parseInt(saved, 10) : MAX_HEARTS;
+    }
+    return MAX_HEARTS;
   });
 
-  // Automatically save to local storage whenever the heart count changes
+  // Safely save to local storage only if in the browser
   useEffect(() => {
-    localStorage.setItem("piedquest_hearts", hearts.toString());
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("piedquest_hearts", hearts.toString());
+    }
   }, [hearts]);
 
-  // Function to simulate a wrong answer / losing a life
   const loseHeart = () => {
     setHearts((prev) => Math.max(0, prev - 1));
   };
 
-  // Function to simulate the interactive Playable Ad completion
   const watchAdToRestore = () => {
     alert("Playable Ad Sandbox: User plays game for 20 seconds... Hearts Restored!");
     setHearts(MAX_HEARTS);
@@ -44,7 +47,6 @@ export default function HeartsSystem() {
         </div>
       </div>
 
-      {/* Conditional UI: If out of hearts, force the Ad. Otherwise, allow normal gameplay. */}
       {hearts === 0 ? (
         <div className="flex flex-col items-center gap-3 w-full animate-fade-in mt-2">
           <p className="text-red-400 text-sm font-semibold">Out of lives! You cannot forge right now.</p>
