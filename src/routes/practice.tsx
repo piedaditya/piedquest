@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import QuestSummary from "@/components/QuestSummary";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -397,6 +398,7 @@ function PracticePlay({
             style={{ boxShadow: "var(--shadow-glow)" }}
           >
             <RefreshCw className="h-5 w-5" />
+            <QuestSummary/>
             Play Another Round
           </button>
           <Link
