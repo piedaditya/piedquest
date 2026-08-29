@@ -1,5 +1,4 @@
 import HeartsSystem from "@/components/HeartsSystem";
-
 import { Link } from "@tanstack/react-router";
 import { Home, Lightbulb, Trophy, Zap } from "lucide-react";
 
@@ -46,7 +45,7 @@ export function TopNav() {
           </button>
         </div>
       </div>
+      {showProModal && <SubscriptionModal onClose={() => setShowProModal(false)} />}
     </>
-  );
-
+    );
 }
