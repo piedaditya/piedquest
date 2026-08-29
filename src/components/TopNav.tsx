@@ -11,6 +11,7 @@ const ITEMS = [
 ] as const;
 
 export function TopNav() {
+  const [showProModal, setShowProModal] = useState(false);
     return (
     <>
       <nav
@@ -38,7 +39,12 @@ export function TopNav() {
       </div>
           </nav>
       <div className="mt-6 px-4">
-        <HeartsSystem />
+        <div className="flex justify-center gap-4 items-center">
+          <HeartsSystem />
+          <button onClick={() => setShowProModal(true)} className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-amber-500 text-indigo-950 font-black rounded-lg shadow-lg hover:scale-105 transition-transform text-sm h-fit">
+            GO PRO
+          </button>
+        </div>
       </div>
     </>
   );
