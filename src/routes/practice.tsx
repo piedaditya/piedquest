@@ -392,13 +392,14 @@ function PracticePlay({
               </p>
             )}
           </div>
+          <QuestSummary/>
+        
           <button
             onClick={onReplay}
             className="group mt-10 flex w-full items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-5 font-display text-lg text-primary-foreground transition-all hover:scale-[1.01] active:scale-[0.99]"
             style={{ boxShadow: "var(--shadow-glow)" }}
           >
             <RefreshCw className="h-5 w-5" />
-            <QuestSummary/>
             Play Another Round
           </button>
           <Link
