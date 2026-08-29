@@ -1,7 +1,8 @@
 import HeartsSystem from "@/components/HeartsSystem";
 import { Link } from "@tanstack/react-router";
 import { Home, Lightbulb, Trophy, Zap } from "lucide-react";
-
+import { useState } from "react";
+import SubscriptionModal from "./SubscriptionModal";
 const ITEMS = [
   { to: "/", label: "Home", icon: Home, exact: true },
   { to: "/my-quests", label: "My Quests", icon: Zap, exact: false },
