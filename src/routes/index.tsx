@@ -1,4 +1,3 @@
-import QuestSummary from "@/components/QuestSummary";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, useState } from "react";
@@ -665,7 +664,6 @@ function LoopCard({
       </div>
       <h3 className="font-display mt-8 text-2xl text-foreground">{title}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{children}</p>
-      <QuestSummary/>
     </div>
   );
 }
