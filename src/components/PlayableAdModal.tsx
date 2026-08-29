@@ -1,76 +1,108 @@
-import { useState, useEffect } from "react";
-import { X, Gamepad2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2, X, AlertCircle } from "lucide-react";
 
-export default function PlayableAdModal({ onComplete, onClose }: { onComplete: () => void, onClose: () => void }) {
-  const [timeLeft, setTimeLeft] = useState(15); 
-  const [score, setScore] = useState(0);
+interface PlayableAdModalProps {
+  onComplete: () => void;
+  onClose: () => void;
+}
 
-  // The strict countdown timer logic
+export default function PlayableAdModal({ onComplete, onClose }: PlayableAdModalProps) {
+  const [adStatus, setAdStatus] = useState<'loading' | 'playing' | 'error'>('loading');
+
   useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [timeLeft]);
+    // ---------------------------------------------------------
+    // AD NETWORK INTEGRATION ZONE
+    // When you register for an ad network (like Monetag), 
+    // their script will be injected here.
+    // ---------------------------------------------------------
+    
+    let adTimeout: NodeJS.Timeout;
 
-  const handleReward = () => {
-    onComplete();
-  };
+    const loadRealAd = async () => {
+      try {
+        setAdStatus('loading');
+        
+        // This simulates the split-second it takes to contact the Ad Server
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setAdStatus('playing');
+
+        // REAL LOGIC (To be uncommented when Ad ID is added):
+        // if (window.RewardedAdNetwork) {
+        //   window.RewardedAdNetwork.showAd({
+        //     onSuccess: () => {
+        //       onComplete(); // Only fires if the network confirms they watched it!
+        //     },
+        //     onError: () => setAdStatus('error')
+        //   });
+        // } else {
+        //   throw new Error("Ad Blocker Detected");
+        // }
+
+        // TEMPORARY FALLBACK until your ad account is approved:
+        // We still force them to wait so your UI flow works, 
+        // but the architecture is now ready for the real network script.
+        adTimeout = setTimeout(() => {
+          onComplete(); 
+        }, 15000); 
+
+      } catch (error) {
+        console.error("Ad Failed to Load:", error);
+        setAdStatus('error');
+      }
+    };
+
+    loadRealAd();
+
+    return () => {
+      // Cleanup to prevent memory leaks if they force-close the app
+      clearTimeout(adTimeout);
+    };
+  }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col h-[500px]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-xl">
+      {/* We hide the close button while playing so they CANNOT skip the ad! */}
+      {adStatus === 'error' && (
+        <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-white p-2 bg-gray-800 rounded-full z-10">
+          <X className="w-6 h-6" />
+        </button>
+      )}
+
+      <div className="flex flex-col items-center justify-center text-center p-8 max-w-md w-full">
         
-        {/* Ad Header with dynamic timer */}
-        <div className="bg-gray-800 p-3 flex justify-between items-center border-b border-gray-700">
-          <span className="text-gray-400 text-xs font-semibold tracking-wider uppercase">Sponsored Mini-Game</span>
-          {timeLeft > 0 ? (
-            <span className="text-white font-mono text-sm bg-gray-950 px-3 py-1 rounded-full border border-gray-700">
-              Reward in {timeLeft}s
-            </span>
-          ) : (
-            <button onClick={handleReward} className="text-gray-400 hover:text-white transition-colors p-1">
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Interactive Game Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-6 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-purple-600/10 pointer-events-none" />
-          
-          <Gamepad2 className="w-16 h-16 text-indigo-400 mb-2 animate-bounce" />
-          
-          <div>
-            <h3 className="text-2xl font-bold text-white mb-2">Block Puzzle Blast</h3>
-            <p className="text-gray-400 text-sm">Tap the glowing block to score points before time runs out!</p>
+        {adStatus === 'loading' && (
+          <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-500">
+            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+            <h3 className="text-xl font-bold text-white tracking-wide">Connecting to Sponsor...</h3>
+            <p className="text-gray-400 text-sm">Please wait while we load your rewarded video.</p>
           </div>
+        )}
 
-          <button 
-            onClick={() => setScore(score + 10)}
-            className="w-32 h-32 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.3)] active:scale-90 transition-all flex items-center justify-center group border-2 border-white/20"
-          >
-            <span className="text-3xl font-black text-white group-active:text-yellow-300 drop-shadow-md">TAP!</span>
-          </button>
-
-          <div className="text-xl font-bold text-indigo-300 tracking-wide">Score: {score}</div>
-        </div>
-
-        {/* Footer Action Button */}
-        <div className="p-4 bg-gray-800 border-t border-gray-700 flex justify-center">
-          {timeLeft > 0 ? (
-            <div className="w-full h-12 flex items-center justify-center bg-gray-700 rounded-lg text-gray-400 font-semibold cursor-not-allowed">
-              Keep playing to get reward...
+        {adStatus === 'playing' && (
+          <div className="w-full aspect-video bg-gray-900 border border-gray-800 rounded-2xl flex flex-col items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.2)] animate-in fade-in duration-500 relative overflow-hidden">
+            {/* The actual video player from the ad network will render over this div */}
+            <div className="absolute inset-0 border-2 border-dashed border-indigo-500/30 rounded-2xl m-4 flex flex-col items-center justify-center">
+               <span className="text-indigo-400 font-black text-2xl animate-pulse tracking-widest">ADVERTISEMENT</span>
+               <span className="text-gray-500 text-sm mt-2">Network Video Container</span>
             </div>
-          ) : (
-            <button 
-              onClick={handleReward}
-              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white rounded-lg font-bold shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all animate-pulse"
-            >
-              Claim Reward & Exit
+          </div>
+        )}
+
+        {adStatus === 'error' && (
+          <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-500">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/50 mb-2">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-white">Ad Blocked or Unavailable</h3>
+            <p className="text-gray-400 mb-6 max-w-xs">
+              We couldn't load the rewarded video. Please disable your ad blocker or try again later to claim your reward.
+            </p>
+            <button onClick={onClose} className="px-6 py-3 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700 w-full transition-colors">
+              Return to Game
             </button>
-          )}
-        </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
