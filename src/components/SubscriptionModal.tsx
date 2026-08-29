@@ -1,34 +1,37 @@
 import { useState } from "react";
-import { Sparkles, CheckCircle2, X, Ticket, Diamond, Crown } from "lucide-react";
+import { Sparkles, CheckCircle2, X, Ticket, Crown } from "lucide-react";
 
 export default function SubscriptionModal({ onClose }: { onClose: () => void }) {
   const [billingCycle, setBillingCycle] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
   const [activePass, setActivePass] = useState<string | null>(null);
+  
+  // This state controls the mobile tab switcher! Default is Gold.
+  const [activeTab, setActiveTab] = useState<'free' | 'gold' | 'special'>('gold');
 
   const handleClaimPass = (tier: string) => {
     setActivePass(tier);
     alert(`🎉 24-Hour ${tier} Pass Activated! Enjoy the ultimate experience.`);
   };
 
-  // Pricing Dictionary (INR)
+  // Pricing Dictionary (INR Base - will convert via PPP later)
   const pricing = {
     daily: {
       gold: { price: 9, original: 10 },
-      diamond: { price: 13, original: 20 }
+      special: { price: 13, original: 20 }
     },
     monthly: {
       gold: { price: 99, original: 300 },
-      diamond: { price: 143, original: 600 }
+      special: { price: 143, original: 600 }
     },
     yearly: {
       gold: { price: 999, original: 3600 },
-      diamond: { price: 1436, original: 7200 }
+      special: { price: 1436, original: 7200 }
     }
   };
 
   const getDiscount = (price: number, original: number) => Math.round(((original - price) / original) * 100);
   const currentGold = pricing[billingCycle].gold;
-  const currentDiamond = pricing[billingCycle].diamond;
+  const currentSpecial = pricing[billingCycle].special;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 lg:p-8 animate-in fade-in duration-300 overflow-y-auto">
@@ -38,26 +41,33 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
           <X className="w-5 h-5" />
         </button>
 
-        {/* Heart-Melting Header */}
-        <div className="text-center p-8 pb-4 border-b border-gray-800/50">
+        {/* Header section with exact custom text */}
+        <div className="text-center p-6 lg:p-8 pb-4 border-b border-gray-800/50">
           <h2 className="text-3xl font-black text-white mb-3">Choose Your Destiny</h2>
           <p className="text-gray-400 max-w-2xl mx-auto italic">
-            "PIEDQUEST is, and always will be, designed to win your heart completely free. These upgrades are simply here if you want to push your experience to the absolute limit."
+            "This is just for few more advancements if you want.... otherwise it is already most capable to win your heart...)"
           </p>
           
+          {/* MOBILE TABS (Hidden on desktop) */}
+          <div className="flex lg:hidden items-center justify-center gap-2 mt-6">
+            <button onClick={() => setActiveTab('free')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'free' ? 'bg-gray-800 text-white' : 'text-gray-500 bg-gray-900/50'}`}>Free</button>
+            <button onClick={() => setActiveTab('gold')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'gold' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 'text-gray-500 bg-gray-900/50'}`}>Gold</button>
+            <button onClick={() => setActiveTab('special')} className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'special' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'text-gray-500 bg-gray-900/50'}`}>Special</button>
+          </div>
+
           {/* 3-Way Cycle Toggle */}
-          <div className="flex items-center justify-center gap-1 mt-6 bg-gray-900 w-fit mx-auto p-1.5 rounded-xl border border-gray-700 shadow-inner">
+          <div className="flex items-center justify-center gap-1 mt-6 lg:mt-6 bg-gray-900 w-fit mx-auto p-1.5 rounded-xl border border-gray-700 shadow-inner">
             <button onClick={() => setBillingCycle('daily')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'daily' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'text-gray-400 hover:text-gray-200'}`}>1-Day Pass</button>
             <button onClick={() => setBillingCycle('monthly')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'text-gray-400 hover:text-gray-200'}`}>Monthly</button>
             <button onClick={() => setBillingCycle('yearly')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'text-gray-400 hover:text-gray-200'}`}>Yearly <span className="text-yellow-400 text-xs ml-1 bg-yellow-400/20 px-1.5 py-0.5 rounded">BEST VALUE</span></button>
           </div>
         </div>
 
-        {/* The 3 Tiers */}
+        {/* The 3 Tiers Container (Grid on desktop, single view on mobile based on tab) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-800">
           
           {/* TIER 1: FREE */}
-          <div className="p-8 flex flex-col hover:bg-gray-900/30 transition-colors">
+          <div className={`p-8 lg:p-10 flex-col hover:bg-gray-900/30 transition-colors ${activeTab === 'free' ? 'flex' : 'hidden'} lg:flex`}>
             <h3 className="text-2xl font-bold text-gray-200 mb-2">Free Explorer</h3>
             <p className="text-gray-500 text-sm mb-6">The core game, crafted with love.</p>
             <div className="text-4xl font-black text-white mb-8">₹0<span className="text-lg text-gray-500 font-normal">/forever</span></div>
@@ -66,21 +76,20 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
               <li className="flex gap-3 text-gray-300"><CheckCircle2 className="w-5 h-5 text-gray-600 shrink-0" /> Infinite Ad-Supported Play</li>
               <li className="flex gap-3 text-gray-300"><CheckCircle2 className="w-5 h-5 text-gray-600 shrink-0" /> Global Leaderboards</li>
             </ul>
-            <button onClick={onClose} className="w-full py-4 rounded-xl font-bold text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors">
+            <button onClick={onClose} className="w-full py-4 rounded-xl font-bold text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors mt-auto">
               Stay on Free
             </button>
           </div>
 
           {/* TIER 2: PRO (GOLD) */}
-          <div className="p-8 flex flex-col bg-gradient-to-b from-amber-900/10 to-transparent relative">
+          <div className={`p-8 lg:p-10 flex-col bg-gradient-to-b from-amber-900/10 to-transparent relative ${activeTab === 'gold' ? 'flex' : 'hidden'} lg:flex`}>
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 relative">
               <Crown className="w-6 h-6 text-yellow-400" />
               <h3 className="text-2xl font-bold text-yellow-400">PRO (Gold)</h3>
             </div>
             <p className="text-gray-400 text-sm mb-6">For the serious trivia master.</p>
             
-            {/* Dynamic Pricing Display */}
             <div className="mb-8">
               <div className="flex items-end gap-2 mb-1">
                 <span className="text-4xl font-black text-white">₹{currentGold.price}</span>
@@ -112,23 +121,25 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
             </div>
           </div>
 
-          {/* TIER 3: VIP (DIAMOND) */}
-          <div className="p-8 flex flex-col bg-gradient-to-b from-cyan-900/10 to-transparent relative">
+          {/* TIER 3: SPECIAL (DIAMOND/BLUE CROWN) */}
+          <div className={`p-8 lg:p-10 flex-col bg-gradient-to-b from-cyan-900/10 to-transparent relative ${activeTab === 'special' ? 'flex' : 'hidden'} lg:flex`}>
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-blue-500"></div>
-            <div className="flex items-center gap-2 mb-2">
-              <Diamond className="w-6 h-6 text-cyan-400" />
-              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">VIP (Diamond)</h3>
+            <div className="flex items-center gap-2 mb-2 relative">
+              <div className="relative">
+                <Crown className="w-6 h-6 text-cyan-400" />
+                <Sparkles className="w-3 h-3 text-blue-300 absolute -top-1 -right-1" />
+              </div>
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">SPECIAL</h3>
             </div>
             <p className="text-gray-400 text-sm mb-6">The ultimate bragging rights.</p>
             
-            {/* Dynamic Pricing Display */}
             <div className="mb-8">
               <div className="flex items-end gap-2 mb-1">
-                <span className="text-4xl font-black text-white">₹{currentDiamond.price}</span>
-                <span className="text-lg text-gray-500 line-through mb-1">₹{currentDiamond.original}</span>
+                <span className="text-4xl font-black text-white">₹{currentSpecial.price}</span>
+                <span className="text-lg text-gray-500 line-through mb-1">₹{currentSpecial.original}</span>
               </div>
               <div className="inline-block bg-cyan-400/20 border border-cyan-400/50 text-cyan-400 text-xs font-bold px-2 py-1 rounded">
-                SAVE ₹{currentDiamond.original - currentDiamond.price} ({getDiscount(currentDiamond.price, currentDiamond.original)}% OFF)
+                SAVE ₹{currentSpecial.original - currentSpecial.price} ({getDiscount(currentSpecial.price, currentSpecial.original)}% OFF)
               </div>
             </div>
             
@@ -140,24 +151,24 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
             </ul>
             
             <div className="space-y-3 mt-auto">
-              {activePass !== 'VIP' ? (
-                <button onClick={() => handleClaimPass('VIP')} className="w-full py-3 rounded-xl font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 hover:bg-cyan-400/20 transition-all flex justify-center items-center gap-2">
+              {activePass !== 'SPECIAL' ? (
+                <button onClick={() => handleClaimPass('SPECIAL')} className="w-full py-3 rounded-xl font-bold text-cyan-400 bg-cyan-400/10 border border-cyan-400/30 hover:bg-cyan-400/20 transition-all flex justify-center items-center gap-2">
                   <Ticket className="w-5 h-5" /> Activate 24H Free Pass
                 </button>
               ) : (
-                <div className="w-full py-3 rounded-xl font-bold text-cyan-400 bg-cyan-400/20 border border-cyan-400 text-center">⏳ VIP Pass Active!</div>
+                <div className="w-full py-3 rounded-xl font-bold text-cyan-400 bg-cyan-400/20 border border-cyan-400 text-center">⏳ Special Pass Active!</div>
               )}
               <button className="w-full py-4 rounded-xl font-black text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-transform">
-                Upgrade to VIP
+                Upgrade to SPECIAL
               </button>
             </div>
           </div>
         </div>
 
-        {/* Heart-Melting Footer */}
+        {/* Custom Footer */}
         <div className="text-center p-4 bg-gray-900 rounded-b-3xl border-t border-gray-800">
           <p className="text-gray-400 text-sm font-medium">
-            We promise you'll never regret your choice—even if you stick with the Free tier forever! 😉
+            "You'll never regret any of these.. even free tier...😉"
           </p>
         </div>
 
