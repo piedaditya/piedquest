@@ -152,6 +152,48 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          active_tier: string
+          created_at: string
+          hearts: number
+          hearts_updated_at: string
+          id: string
+          last_login: string
+          migrated: boolean
+          role: string
+          streak: number
+          updated_at: string
+          xp: number
+        }
+        Insert: {
+          active_tier?: string
+          created_at?: string
+          hearts?: number
+          hearts_updated_at?: string
+          id: string
+          last_login?: string
+          migrated?: boolean
+          role?: string
+          streak?: number
+          updated_at?: string
+          xp?: number
+        }
+        Update: {
+          active_tier?: string
+          created_at?: string
+          hearts?: number
+          hearts_updated_at?: string
+          id?: string
+          last_login?: string
+          migrated?: boolean
+          role?: string
+          streak?: number
+          updated_at?: string
+          xp?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
