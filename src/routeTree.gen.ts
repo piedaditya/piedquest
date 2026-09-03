@@ -9,37 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResultsRouteImport } from './routes/results'
-import { Route as QuizRouteImport } from './routes/quiz'
-import { Route as QuickQaRouteImport } from './routes/quick-qa'
-import { Route as PracticeRouteImport } from './routes/practice'
-import { Route as MyQuestsRouteImport } from './routes/my-quests'
-import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as MyQuestsRouteImport } from './routes/my-quests'
+import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as QuickQaRouteImport } from './routes/quick-qa'
+import { Route as QuizRouteImport } from './routes/quiz'
+import { Route as ResultsRouteImport } from './routes/results'
 
-const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuizRoute = QuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuickQaRoute = QuickQaRouteImport.update({
-  id: '/quick-qa',
-  path: '/quick-qa',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PracticeRoute = PracticeRouteImport.update({
-  id: '/practice',
-  path: '/practice',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MyQuestsRoute = MyQuestsRouteImport.update({
-  id: '/my-quests',
-  path: '/my-quests',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -47,14 +33,35 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
   path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const MyQuestsRoute = MyQuestsRouteImport.update({
+  id: '/my-quests',
+  path: '/my-quests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeRoute = PracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuickQaRoute = QuickQaRouteImport.update({
+  id: '/quick-qa',
+  path: '/quick-qa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsRoute = ResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/leaderboard'
     | '/my-quests'
     | '/practice'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/leaderboard'
     | '/my-quests'
     | '/practice'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/leaderboard'
     | '/my-quests'
     | '/practice'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MyQuestsRoute: typeof MyQuestsRoute
   PracticeRoute: typeof PracticeRoute
@@ -123,39 +136,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/results': {
-      id: '/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/quiz': {
-      id: '/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof QuizRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/quick-qa': {
-      id: '/quick-qa'
-      path: '/quick-qa'
-      fullPath: '/quick-qa'
-      preLoaderRoute: typeof QuickQaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/practice': {
-      id: '/practice'
-      path: '/practice'
-      fullPath: '/practice'
-      preLoaderRoute: typeof PracticeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/my-quests': {
-      id: '/my-quests'
-      path: '/my-quests'
-      fullPath: '/my-quests'
-      preLoaderRoute: typeof MyQuestsRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -165,11 +157,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/my-quests': {
+      id: '/my-quests'
+      path: '/my-quests'
+      fullPath: '/my-quests'
+      preLoaderRoute: typeof MyQuestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice': {
+      id: '/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quick-qa': {
+      id: '/quick-qa'
+      path: '/quick-qa'
+      fullPath: '/quick-qa'
+      preLoaderRoute: typeof QuickQaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results': {
+      id: '/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -177,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   LeaderboardRoute: LeaderboardRoute,
   MyQuestsRoute: MyQuestsRoute,
   PracticeRoute: PracticeRoute,
