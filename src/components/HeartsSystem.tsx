@@ -1,31 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import PlayableAdModal from "./PlayableAdModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatCountdown } from "@/lib/player-state";
 
 export default function HeartsSystem() {
-  const MAX_HEARTS = 5;
   const [showAd, setShowAd] = useState(false);
-  
-  const [hearts, setHearts] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = window.localStorage.getItem("piedquest_hearts");
-      return saved !== null ? parseInt(saved, 10) : MAX_HEARTS;
-    }
-    return MAX_HEARTS;
-  });
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("piedquest_hearts", hearts.toString());
-    }
-  }, [hearts]);
-
-  const loseHeart = () => {
-    setHearts((prev) => Math.max(0, prev - 1));
-  };
+  const { player, ready, maxHearts, msToNextHeart, loseHeart, refillHearts } = useAuth();
+  const hearts = ready ? player.hearts : maxHearts;
 
   const handleAdComplete = () => {
-    setHearts(MAX_HEARTS);
+    void refillHearts();
     setShowAd(false);
   };
 
@@ -35,7 +20,7 @@ export default function HeartsSystem() {
         <div className="flex justify-between items-center w-full">
           <span className="text-white font-bold text-lg">Daily Lives</span>
           <div className="flex gap-1">
-            {[...Array(MAX_HEARTS)].map((_, index) => (
+            {[...Array(maxHearts)].map((_, index) => (
               <Heart
                 key={index}
                 className={`w-6 h-6 transition-all duration-300 ${
@@ -48,7 +33,14 @@ export default function HeartsSystem() {
           </div>
         </div>
 
-        {hearts === 0 ? (
+        {ready && hearts < maxHearts && msToNextHeart > 0 && (
+          <p className="text-xs text-gray-400 w-full text-center">
+            Next life in{" "}
+            <span className="text-red-400 font-semibold">{formatCountdown(msToNextHeart)}</span>
+          </p>
+        )}
+
+        {ready && hearts === 0 ? (
           <div className="flex flex-col items-center gap-3 w-full animate-in fade-in mt-2">
             <p className="text-red-400 text-sm font-semibold">Out of lives! You cannot forge right now.</p>
             <button
@@ -60,7 +52,7 @@ export default function HeartsSystem() {
           </div>
         ) : (
           <button
-            onClick={loseHeart}
+            onClick={() => void loseHeart()}
             className="text-xs text-gray-500 underline mt-2 opacity-50 hover:opacity-100 transition-opacity"
           >
             (Dev Test: Click to lose a heart)
@@ -69,9 +61,9 @@ export default function HeartsSystem() {
       </div>
 
       {showAd && (
-        <PlayableAdModal 
-          onComplete={handleAdComplete} 
-          onClose={() => setShowAd(false)} 
+        <PlayableAdModal
+          onComplete={handleAdComplete}
+          onClose={() => setShowAd(false)}
         />
       )}
     </>
