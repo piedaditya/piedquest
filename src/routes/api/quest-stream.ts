@@ -59,10 +59,19 @@ export const Route = createFileRoute("/api/quest-stream")({
         const theme = tier === "gold" || tier === "special" ? body.theme : undefined;
 
         const encoder = new TextEncoder();
+        const signal = request.signal;
         const stream = new ReadableStream<Uint8Array>({
           async start(controller) {
-            const send = (payload: unknown) =>
-              controller.enqueue(encoder.encode(`${JSON.stringify(payload)}\n`));
+            // The client may navigate away mid-generation; that aborts the
+            // request and must not be treated as an application error.
+            const send = (payload: unknown) => {
+              if (signal.aborted) return;
+              try {
+                controller.enqueue(encoder.encode(`${JSON.stringify(payload)}\n`));
+              } catch {
+                /* stream already closed by the client */
+              }
+            };
             try {
               const { enforceAiBudget } = await import("@/lib/ai-rate-limit.server");
               const history = await readRecentHistory(owner, body.topic);
