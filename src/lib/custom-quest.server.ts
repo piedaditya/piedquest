@@ -12,6 +12,8 @@ export interface GeneratedQuestion {
   explanation: string;
 }
 
+export type PlayerTier = "free" | "gold" | "special";
+
 export interface QuestResult {
   questions: GeneratedQuestion[];
   notFound: boolean;
@@ -39,6 +41,20 @@ GOOD: "In ancient Korea's Silla Kingdom, what was the highest official rank a 'H
 
 You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, original and never trivially guessable.`;
 
+/**
+ * Tier-based Quizmaster persona. Gold/Special unlock a themed host whose tone
+ * and vocabulary match the chosen universe; Free always gets the standard host.
+ */
+export function buildSystemPrompt(tier: PlayerTier = "free", theme?: string): string {
+  const cleanTheme = (theme ?? "").trim().slice(0, 80);
+  const premium = tier === "gold" || tier === "special";
+  const host =
+    premium && cleanTheme
+      ? `\n\nCUSTOM AI HOST (unlocked): You are hosting this quest fully in-character as a Quizmaster from the universe of "${cleanTheme}". Adapt your conversational tone, vocabulary, catchphrases and the wording of explanations to strictly match that universe, while keeping every fact accurate. Never break character, never mention that a theme was configured. Question topics still follow the user's requested topic.`
+      : `\n\nHOST PERSONA: You are the standard PIEDQUEST Quizmaster — confident, energetic, concise and encouraging. Do not adopt any other fictional persona.`;
+  return SYSTEM_PROMPT + host;
+}
+
 const DIFFICULTY_HINT: Record<Difficulty, string> = {
   Easy: "simple one-line questions a beginner can answer",
   Normal: "standard general knowledge on the topic",
@@ -52,6 +68,7 @@ export function buildQuestPrompt(args: {
   mode: AnswerMode;
   count: number;
   avoid?: string[];
+  history?: string[];
 }): string {
   const modeLine =
     args.mode === "typing"
@@ -63,10 +80,17 @@ export function buildQuestPrompt(args: {
       ? `\nDo NOT repeat or rephrase any of these already-generated questions:\n- ${args.avoid.slice(-40).join("\n- ")}\n`
       : "";
 
+  const historyLine =
+    args.history && args.history.length
+      ? `\n30-DAY FRESHNESS RULE (critical): this player has already been asked the questions below in the last 30 days. Do NOT repeat, rephrase, translate or ask about the same specific fact as any of them. Explore different chapters, angles and sub-topics instead:\n- ${args.history
+          .slice(-120)
+          .join("\n- ")}\n`
+      : "";
+
   return `Create ${args.count} original multiple-choice trivia questions about: "${args.topic}".
 Difficulty: ${args.difficulty} — ${DIFFICULTY_HINT[args.difficulty]}.
 ${modeLine}
-${avoidLine}
+${avoidLine}${historyLine}
 Every question must be factually accurate and include a short, educational explanation (1-2 sentences).
 
 Return ONLY JSON in this exact shape:
@@ -137,11 +161,14 @@ export async function generateCustomQuest(args: {
   mode: AnswerMode;
   count: number;
   avoid?: string[];
+  history?: string[];
+  tier?: PlayerTier;
+  theme?: string;
 }): Promise<QuestResult> {
   const { hasGeminiKey, callGemini } = await import("./gemini.server");
   if (hasGeminiKey()) {
     const text = await callGemini({
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(args.tier, args.theme),
       prompt: buildQuestPrompt(args),
       json: true,
     });
@@ -159,7 +186,7 @@ export async function generateCustomQuest(args: {
       model: MODEL,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: buildSystemPrompt(args.tier, args.theme) },
         { role: "user", content: buildQuestPrompt(args) },
       ],
     }),
