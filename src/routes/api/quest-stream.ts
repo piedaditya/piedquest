@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type {} from "@tanstack/react-start";
 import { z } from "zod";
 
 import {
@@ -44,7 +45,7 @@ async function resolveCaller(request: Request): Promise<{ userId: string | null;
 export const Route = createFileRoute("/api/quest-stream")({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         let body: z.infer<typeof BodySchema>;
         try {
           body = BodySchema.parse(await request.json());
