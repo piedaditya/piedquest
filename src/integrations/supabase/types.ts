@@ -152,6 +152,36 @@ export type Database = {
         }
         Relationships: []
       }
+      question_history: {
+        Row: {
+          client_key: string | null
+          created_at: string
+          id: string
+          question_hash: string
+          question_text: string | null
+          topic: string
+          user_id: string | null
+        }
+        Insert: {
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          question_hash: string
+          question_text?: string | null
+          topic: string
+          user_id?: string | null
+        }
+        Update: {
+          client_key?: string | null
+          created_at?: string
+          id?: string
+          question_hash?: string
+          question_text?: string | null
+          topic?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           active_tier: string
