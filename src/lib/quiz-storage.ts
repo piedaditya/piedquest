@@ -19,7 +19,7 @@ export interface QuizStorage {
   gkScope: "global" | "regional";
 }
 
-const defaultState: QuizStorage = {
+export const defaultState: QuizStorage = {
   lastPlayedDate: null,
   lastScore: null,
   lastPattern: null,
