@@ -74,15 +74,21 @@ export async function streamQuest(
     }
   };
 
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) handleLine(line);
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) handleLine(line);
+    }
+    if (buffer) handleLine(buffer);
+  } catch (e) {
+    // Navigating away / cancelling closes the stream — not an app error.
+    if (e instanceof Error && (e.name === "AbortError" || e.name === "TypeError")) return;
+    throw e;
   }
-  if (buffer) handleLine(buffer);
 
   if (streamError) throw new Error(streamError);
 }
