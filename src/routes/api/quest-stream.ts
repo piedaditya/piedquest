@@ -110,10 +110,14 @@ export const Route = createFileRoute("/api/quest-stream")({
 
               send({ type: "done", total: collected.length });
             } catch (e) {
-              send({
-                type: "error",
-                message: e instanceof Error ? e.message : "Generation failed",
-              });
+              const aborted =
+                signal.aborted || (e instanceof Error && e.name === "AbortError");
+              if (!aborted) {
+                send({
+                  type: "error",
+                  message: e instanceof Error ? e.message : "Generation failed",
+                });
+              }
             } finally {
               try {
                 controller.close();
