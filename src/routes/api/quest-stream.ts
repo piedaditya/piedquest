@@ -81,6 +81,7 @@ export const Route = createFileRoute("/api/quest-stream")({
               // Chunked generation keeps every model call short so long banks
               // stream in instead of blowing a single request timeout.
               while (remaining > 0) {
+                if (signal.aborted) break;
                 const size = Math.min(CHUNK_SIZE, remaining);
                 await enforceAiBudget("custom_quest");
                 const { questions, notFound } = await generateCustomQuest({
