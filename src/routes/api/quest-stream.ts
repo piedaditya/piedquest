@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type {} from "@tanstack/start-client-core/serverRoute";
+import type {} from "@tanstack/start-client-core";
 import { z } from "zod";
 
 import {
