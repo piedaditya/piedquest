@@ -125,7 +125,7 @@ function MyQuestsRoute() {
       }
 
       for (const size of batches) {
-        const { questions: q, notFound } = await generate({
+        const { questions: q, notFound, generationError } = await generate({
           data: {
             topic: clean,
             difficulty,
@@ -134,6 +134,15 @@ function MyQuestsRoute() {
             avoid: collected.slice(-40).map((x) => x.question),
           },
         });
+        if (generationError) {
+          setError(
+            collected.length
+              ? `${generationError} ${collected.length} of ${target} questions were prepared; retry to forge a complete quest.`
+              : generationError,
+          );
+          setPhase("config");
+          return;
+        }
         if (notFound && !collected.length) {
           setError(
             "Sorry, I searched the entire multiverse and couldn't find that! But try your best with another topic.",

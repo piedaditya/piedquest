@@ -13,8 +13,22 @@ const InputSchema = z.object({
 export const generateMyQuest = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }) => {
-    const { enforceAiBudget } = await import("./ai-rate-limit.server");
-    await enforceAiBudget("custom_quest");
-    const { questions, notFound } = await generateCustomQuest(data);
-    return { questions, notFound };
+    try {
+      const { enforceAiBudget } = await import("./ai-rate-limit.server");
+      await enforceAiBudget("custom_quest");
+      const { questions, notFound } = await generateCustomQuest(data);
+      return { questions, notFound, generationError: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Quest generation failed.";
+      const isTemporary =
+        /high demand|try again|busy|rate limit|429|50[0234]|unavailable/i.test(message);
+
+      return {
+        questions: [],
+        notFound: false,
+        generationError: isTemporary
+          ? "PIEDQUEST AI is busy right now. Your setup is safe—please wait a moment and try again."
+          : message,
+      };
+    }
   });
