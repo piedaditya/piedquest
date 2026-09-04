@@ -13,6 +13,7 @@ import {
   getLevelInfo,
   hasPlayedToday,
   readStorage,
+  defaultState,
   setFavoriteFandom,
   setRegion,
   setGkScope,
@@ -83,11 +84,14 @@ function Index() {
 
 function LandingContainer() {
   const { data } = useSuspenseQuery(dailyQuizQueryOptions);
-  const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
+  // Start from defaults on both server and client so hydration matches,
+  // then load persisted progress after mount.
+  const [storage, setStorage] = useState<QuizStorage>(() => defaultState);
 
   useEffect(() => {
     setStorage(readStorage());
   }, []);
+
 
   return (
     <Landing
