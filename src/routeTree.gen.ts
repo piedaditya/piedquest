@@ -17,6 +17,7 @@ import { Route as MyQuestsRouteImport } from './routes/my-quests'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiQuestStreamRouteImport } from './routes/api/quest-stream'
 
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
@@ -58,6 +59,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiQuestStreamRoute = ApiQuestStreamRouteImport.update({
+  id: '/api/quest-stream',
+  path: '/api/quest-stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/api/quest-stream'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/api/quest-stream'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/api/quest-stream'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   QuickQaRoute: typeof QuickQaRoute
   QuizRoute: typeof QuizRoute
   ResultsRoute: typeof ResultsRoute
+  ApiQuestStreamRoute: typeof ApiQuestStreamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/quest-stream': {
+      id: '/api/quest-stream'
+      path: '/api/quest-stream'
+      fullPath: '/api/quest-stream'
+      preLoaderRoute: typeof ApiQuestStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuickQaRoute: QuickQaRoute,
   QuizRoute: QuizRoute,
   ResultsRoute: ResultsRoute,
+  ApiQuestStreamRoute: ApiQuestStreamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
