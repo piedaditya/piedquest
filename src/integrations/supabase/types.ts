@@ -152,6 +152,98 @@ export type Database = {
         }
         Relationships: []
       }
+      league_members: {
+        Row: {
+          id: string
+          joined_at: string
+          league_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          league_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          league_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "league_members_league_id_fkey"
+            columns: ["league_id"]
+            isOneToOne: false
+            referencedRelation: "leagues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leagues: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          losses: number
+          streak: number
+          tier: string
+          updated_at: string
+          username: string
+          wins: number
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          losses?: number
+          streak?: number
+          tier?: string
+          updated_at?: string
+          username?: string
+          wins?: number
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          losses?: number
+          streak?: number
+          tier?: string
+          updated_at?: string
+          username?: string
+          wins?: number
+          xp?: number
+        }
+        Relationships: []
+      }
       question_history: {
         Row: {
           client_key: string | null
@@ -224,6 +316,48 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_quests: {
+        Row: {
+          created_at: string
+          difficulty: string
+          id: string
+          mode: string
+          question_count: number
+          questions: Json
+          score: number
+          topic: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          mode?: string
+          question_count?: number
+          questions?: Json
+          score?: number
+          topic: string
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          id?: string
+          mode?: string
+          question_count?: number
+          questions?: Json
+          score?: number
+          topic?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -231,6 +365,10 @@ export type Database = {
     Functions: {
       consume_ai_budget: {
         Args: { _client_key: string; _feature: string; _limit: number }
+        Returns: boolean
+      }
+      is_league_member: {
+        Args: { _league_id: string; _user_id: string }
         Returns: boolean
       }
     }
