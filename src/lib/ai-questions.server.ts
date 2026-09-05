@@ -71,50 +71,16 @@ export async function generateQuestions(args: {
   count: number;
   asked: string[];
 }): Promise<AiQuestion[]> {
-  const { hasGeminiKey, callGemini } = await import("./gemini.server");
-  if (hasGeminiKey()) {
-    const text = await callGemini({
-      system:
-        "You are a trivia master. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, never repeated, and 20-25 words MAX.",
-      prompt: buildPrompt(args.category, args.region, args.count, args.asked),
-      json: true,
-    });
-    return parseAiQuestions(text);
+  const system =
+    "You are a trivia master. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate, never repeated, and 20-25 words MAX.";
+  const prompt = buildPrompt(args.category, args.region, args.count, args.asked);
+
+  try {
+    const { callGateway } = await import("./ai-gateway.server");
+    return parseAiQuestions(await callGateway({ system, prompt, json: true }));
+  } catch (error) {
+    const { hasGeminiKey, callGemini } = await import("./gemini.server");
+    if (!hasGeminiKey()) throw error;
+    return parseAiQuestions(await callGemini({ system, prompt, json: true }));
   }
-
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("AI is not configured");
-
-  const response = await fetch(GATEWAY, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": apiKey,
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a trivia master. You always answer with valid JSON only, no markdown fences. Questions must be factually accurate and never repeated.",
-        },
-        { role: "user", content: buildPrompt(args.category, args.region, args.count, args.asked) },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    if (response.status === 429) throw new Error("AI is busy right now — try again in a moment.");
-    if (response.status === 402) throw new Error("AI credits exhausted. Add credits to keep generating quests.");
-    throw new Error(`AI request failed [${response.status}]: ${body.slice(0, 300)}`);
-  }
-
-  const data = (await response.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  const content = data.choices?.[0]?.message?.content ?? "";
-  return parseAiQuestions(content);
 }
