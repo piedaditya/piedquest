@@ -10,6 +10,12 @@ export function hasGeminiKey(): boolean {
 const RETRYABLE = new Set([429, 500, 502, 503, 504]);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Exponential backoff schedule: 2s, then 4s, then 8s (3 retries max). */
+const BACKOFF_MS = [2000, 4000, 8000];
+
+export const HIGH_DEMAND_MESSAGE =
+  "The AI is experiencing high demand right now. Please try again in a few moments.";
+
 export async function callGemini(args: {
   system: string;
   prompt: string;
@@ -18,8 +24,9 @@ export async function callGemini(args: {
   const key = process.env["GEMINI_API_KEY"];
   if (!key) throw new Error("Gemini is not configured");
 
-  const maxAttempts = 4;
+  const maxAttempts = BACKOFF_MS.length + 1;
   let lastStatus = 0;
+
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const res = await fetch(`${ENDPOINT}?key=${encodeURIComponent(key)}`, {
@@ -49,18 +56,18 @@ export async function callGemini(args: {
 
     if (RETRYABLE.has(res.status) && attempt < maxAttempts - 1) {
       const retryAfter = Number(res.headers.get("retry-after"));
-      const delay = Number.isFinite(retryAfter) && retryAfter > 0
-        ? retryAfter * 1000
-        : 700 * 2 ** attempt + Math.random() * 400;
+      const delay =
+        Number.isFinite(retryAfter) && retryAfter > 0
+          ? retryAfter * 1000
+          : (BACKOFF_MS[attempt] ?? 8000) + Math.random() * 400;
       await sleep(delay);
       continue;
     }
 
     if (RETRYABLE.has(res.status)) {
-      throw new Error(
-        "The AI is experiencing high demand right now. Please try again in a few moments.",
-      );
+      throw new Error(HIGH_DEMAND_MESSAGE);
     }
+
     throw new Error(`Gemini request failed [${res.status}]: ${body.slice(0, 300)}`);
   }
 
