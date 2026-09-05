@@ -6,8 +6,6 @@ export interface AiQuestion {
   explanation: string;
 }
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-3.6-flash";
 
 export function buildPrompt(
   category: string,

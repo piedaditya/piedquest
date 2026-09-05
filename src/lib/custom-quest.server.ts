@@ -22,8 +22,6 @@ export interface QuestResult {
 export const TOPIC_NOT_FOUND_MESSAGE =
   "Sorry, I searched the entire multiverse and couldn't find that! But try your best with another topic.";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-2.5-flash";
 
 const SYSTEM_PROMPT = `You are an elite, highly accurate trivia master. The user will give you a topic and a difficulty level.
 
