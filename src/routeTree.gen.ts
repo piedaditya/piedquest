@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VaultRouteImport } from './routes/vault'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as QuickQaRouteImport } from './routes/quick-qa'
@@ -19,6 +20,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiQuestStreamRouteImport } from './routes/api/quest-stream'
 
+const VaultRoute = VaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/vault'
     | '/api/quest-stream'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/vault'
     | '/api/quest-stream'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/vault'
     | '/api/quest-stream'
   fileRoutesById: FileRoutesById
 }
@@ -144,11 +156,19 @@ export interface RootRouteChildren {
   QuickQaRoute: typeof QuickQaRoute
   QuizRoute: typeof QuizRoute
   ResultsRoute: typeof ResultsRoute
+  VaultRoute: typeof VaultRoute
   ApiQuestStreamRoute: typeof ApiQuestStreamRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vault': {
+      id: '/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results': {
       id: '/results'
       path: '/results'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuickQaRoute: QuickQaRoute,
   QuizRoute: QuizRoute,
   ResultsRoute: ResultsRoute,
+  VaultRoute: VaultRoute,
   ApiQuestStreamRoute: ApiQuestStreamRoute,
 }
 export const routeTree = rootRouteImport
