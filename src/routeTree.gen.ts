@@ -9,16 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VaultRouteImport } from './routes/vault'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as QuickQaRouteImport } from './routes/quick-qa'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as MyQuestsRouteImport } from './routes/my-quests'
+import { Route as LeaguesRouteImport } from './routes/leagues'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiQuestStreamRouteImport } from './routes/api/quest-stream'
 
+const VaultRoute = VaultRouteImport.update({
+  id: '/vault',
+  path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -42,6 +49,11 @@ const PracticeRoute = PracticeRouteImport.update({
 const MyQuestsRoute = MyQuestsRouteImport.update({
   id: '/my-quests',
   path: '/my-quests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaguesRoute = LeaguesRouteImport.update({
+  id: '/leagues',
+  path: '/leagues',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -69,22 +81,26 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/leagues': typeof LeaguesRoute
   '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/leagues': typeof LeaguesRoute
   '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRoutesById {
@@ -92,11 +108,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/leagues': typeof LeaguesRoute
   '/my-quests': typeof MyQuestsRoute
   '/practice': typeof PracticeRoute
   '/quick-qa': typeof QuickQaRoute
   '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
+  '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
 }
 export interface FileRouteTypes {
@@ -105,33 +123,39 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/leaderboard'
+    | '/leagues'
     | '/my-quests'
     | '/practice'
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/vault'
     | '/api/quest-stream'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/leaderboard'
+    | '/leagues'
     | '/my-quests'
     | '/practice'
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/vault'
     | '/api/quest-stream'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/leaderboard'
+    | '/leagues'
     | '/my-quests'
     | '/practice'
     | '/quick-qa'
     | '/quiz'
     | '/results'
+    | '/vault'
     | '/api/quest-stream'
   fileRoutesById: FileRoutesById
 }
@@ -139,16 +163,25 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  LeaguesRoute: typeof LeaguesRoute
   MyQuestsRoute: typeof MyQuestsRoute
   PracticeRoute: typeof PracticeRoute
   QuickQaRoute: typeof QuickQaRoute
   QuizRoute: typeof QuizRoute
   ResultsRoute: typeof ResultsRoute
+  VaultRoute: typeof VaultRoute
   ApiQuestStreamRoute: typeof ApiQuestStreamRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vault': {
+      id: '/vault'
+      path: '/vault'
+      fullPath: '/vault'
+      preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results': {
       id: '/results'
       path: '/results'
@@ -182,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/my-quests'
       fullPath: '/my-quests'
       preLoaderRoute: typeof MyQuestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leagues': {
+      id: '/leagues'
+      path: '/leagues'
+      fullPath: '/leagues'
+      preLoaderRoute: typeof LeaguesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -219,11 +259,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   LeaderboardRoute: LeaderboardRoute,
+  LeaguesRoute: LeaguesRoute,
   MyQuestsRoute: MyQuestsRoute,
   PracticeRoute: PracticeRoute,
   QuickQaRoute: QuickQaRoute,
   QuizRoute: QuizRoute,
   ResultsRoute: ResultsRoute,
+  VaultRoute: VaultRoute,
   ApiQuestStreamRoute: ApiQuestStreamRoute,
 }
 export const routeTree = rootRouteImport
