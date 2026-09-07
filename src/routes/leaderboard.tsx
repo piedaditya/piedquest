@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Crown, Flame, Home, Loader2, Pencil, ShieldAlert, Trophy, Zap } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import TierBadge from "@/components/TierBadge";
+import { getGlobalTop, type PublicPlayer } from "@/lib/social.functions";
 import { BgGlow, Logo } from "@/lib/quest-ui";
 import { getLevelInfo, readStorage, type QuizStorage } from "@/lib/quiz-storage";
 import {
@@ -32,7 +35,14 @@ function avatarFor(id: string): string {
 }
 
 function LeaderboardRoute() {
-  const [tab, setTab] = useState<"daily" | "xp" | "streak">("daily");
+  const [tab, setTab] = useState<"daily" | "global" | "xp" | "streak">("daily");
+  const globalTopFn = useServerFn(getGlobalTop);
+  const globalQuery = useQuery<PublicPlayer[]>({
+    queryKey: ["global-top"],
+    queryFn: () => globalTopFn(),
+    refetchInterval: 20_000,
+    enabled: tab === "global",
+  });
   const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
   const [clientId, setClientId] = useState("");
   const [username, setLocalName] = useState("");
@@ -118,6 +128,9 @@ function LeaderboardRoute() {
           <TabBtn active={tab === "daily"} onClick={() => setTab("daily")}>
             Daily
           </TabBtn>
+          <TabBtn active={tab === "global"} onClick={() => setTab("global")}>
+            Global
+          </TabBtn>
           <TabBtn active={tab === "xp"} onClick={() => setTab("xp")}>
             Top XP
           </TabBtn>
@@ -134,6 +147,66 @@ function LeaderboardRoute() {
             myRun={myRun}
             myRank={myDailyRank}
           />
+        ) : tab === "global" ? (
+          globalQuery.isLoading ? (
+            <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading global standings…
+            </div>
+          ) : (globalQuery.data?.length ?? 0) === 0 ? (
+            <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              No signed-in players ranked yet — create an account and earn XP to top the chart.
+            </div>
+          ) : (
+            <ol className="mt-6 space-y-2">
+              {(globalQuery.data ?? []).map((p, i) => (
+                <li
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-2xl border border-border p-3.5 transition-all hover:border-primary/40"
+                  style={{
+                    background:
+                      i === 0
+                        ? "linear-gradient(90deg, oklch(0.28 0.15 122 / 0.25), var(--color-card))"
+                        : "var(--color-card)",
+                  }}
+                >
+                  <span
+                    className={`font-display grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sm ${
+                      i === 0
+                        ? "bg-primary text-primary-foreground"
+                        : i < 3
+                          ? "bg-accent/30 text-accent"
+                          : "bg-secondary text-muted-foreground"
+                    }`}
+                  >
+                    {i === 0 ? <Crown className="h-4 w-4" /> : i + 1}
+                  </span>
+                  <span className="text-2xl">{avatarFor(p.id)}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display flex items-center gap-2 truncate text-base text-foreground">
+                      @{p.username}
+                      <TierBadge tier={p.tier} />
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.wins + p.losses > 0
+                        ? `${Math.round((p.wins / (p.wins + p.losses)) * 100)}% win rate`
+                        : "New challenger"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="inline-flex items-center gap-1 font-display text-sm text-primary">
+                      <Zap className="h-3.5 w-3.5" />
+                      {p.xp.toLocaleString()}
+                    </p>
+                    <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Flame className="h-3 w-3" />
+                      {p.streak}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )
         ) : query.isLoading ? (
           <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
