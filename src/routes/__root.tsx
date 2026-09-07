@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { TopNav } from "../components/TopNav";
 import { AuthProvider } from "../contexts/AuthContext";
+import { ThemeProvider, THEME_STORAGE_KEY } from "../contexts/ThemeContext";
 
 function NotFoundComponent() {
   return (
@@ -115,6 +116,12 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          // Paints the saved theme before first paint so there is no flash.
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}')||'dark';document.documentElement.classList.add('theme-'+t);document.documentElement.style.colorScheme=t==='light'?'light':'dark';}catch(e){}})()`,
+          }}
+        />
       </head>
       <body>
         {children}
@@ -130,9 +137,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <ThemeProvider>
         <TopNav />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
