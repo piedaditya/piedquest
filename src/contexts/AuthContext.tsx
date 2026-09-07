@@ -12,6 +12,8 @@ import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
 import { getServerTime } from "@/lib/server-time.functions";
+import { syncProfile } from "@/lib/social.functions";
+import { getUsername } from "@/lib/leaderboard";
 import {
   MAX_HEARTS,
   applyHeartRefill,
@@ -58,6 +60,19 @@ function rowToPlayer(row: Record<string, unknown>): PlayerState {
   };
 }
 
+/** Mirrors the private economy row onto the public, leaderboard-visible card. */
+function pushProfile(p: PlayerState) {
+  if (!p.id) return Promise.resolve(null);
+  return syncProfile({
+    data: {
+      username: getUsername(),
+      tier: p.activeTier,
+      xp: p.xp,
+      streak: p.streak,
+    },
+  }).catch(() => null);
+}
+
 function playerToRow(p: PlayerState) {
   return {
     xp: p.xp,
@@ -88,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlayer(next);
       if (next.id) {
         await supabase.from("users").update(playerToRow(next)).eq("id", next.id);
+        void pushProfile(next);
       } else {
         writeGuest(next);
       }
@@ -118,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       state.role = "registered";
       await supabase.from("users").update(playerToRow(state)).eq("id", userId);
       setPlayer(state);
+      void pushProfile(state);
     },
     [],
   );
