@@ -16,6 +16,7 @@ import {
 import { getClientId, getUsername } from "@/lib/leaderboard";
 import { formatMs } from "@/lib/daily-leaderboard";
 import { submitDailyResult } from "@/lib/leaderboard.functions";
+import { recordRoundResult } from "@/lib/social.functions";
 import {
   BgGlow,
   FullBleed,
@@ -78,6 +79,15 @@ function ResultsContainer() {
         disqualified: s.lastDisqualified,
       },
     }).catch(() => undefined);
+
+    // Win/loss ledger for the Player Vault (once per daily run).
+    const guard = `piedquest_wl_${s.lastPlayedDate ?? getLocalDateString()}`;
+    if (!localStorage.getItem(guard)) {
+      localStorage.setItem(guard, "1");
+      void recordRoundResult({
+        data: { won: !s.lastDisqualified && (s.lastScore ?? 0) >= 8 },
+      }).catch(() => undefined);
+    }
   }, []);
 
   if (!data) {

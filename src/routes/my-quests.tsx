@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { saveVaultQuest } from "@/lib/social.functions";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -159,6 +160,15 @@ function MyQuestsRoute() {
         throw new Error("The AI returned no usable questions — try rephrasing your topic.");
       setQuestions(usable);
       setPhase("play");
+      void saveVaultQuest({
+        data: {
+          topic: clean,
+          difficulty,
+          mode,
+          questionCount: usable.length,
+          questions: usable.slice(0, 25),
+        },
+      }).catch(() => undefined);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generation failed");
       setPhase("config");
