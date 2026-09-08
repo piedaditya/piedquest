@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_sessions: {
+        Row: {
+          amount_minor: number
+          billing_cycle: string
+          country_code: string
+          created_at: string
+          currency: string
+          id: string
+          provider: string
+          provider_session_id: string | null
+          status: string
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_minor: number
+          billing_cycle: string
+          country_code?: string
+          created_at?: string
+          currency: string
+          id?: string
+          provider?: string
+          provider_session_id?: string | null
+          status?: string
+          tier: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_minor?: number
+          billing_cycle?: string
+          country_code?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          provider?: string
+          provider_session_id?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_leaderboard: {
         Row: {
           created_at: string
@@ -116,6 +161,39 @@ export type Database = {
           question_order?: number
           quiz_date?: string
           quiz_number?: number
+        }
+        Relationships: []
+      }
+      demo_passes: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          started_at: string
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          started_at?: string
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          started_at?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -278,6 +356,8 @@ export type Database = {
         Row: {
           active_tier: string
           created_at: string
+          daily_quests_played: number
+          daily_reset_date: string
           hearts: number
           hearts_updated_at: string
           id: string
@@ -285,12 +365,15 @@ export type Database = {
           migrated: boolean
           role: string
           streak: number
+          tier_expires_at: string | null
           updated_at: string
           xp: number
         }
         Insert: {
           active_tier?: string
           created_at?: string
+          daily_quests_played?: number
+          daily_reset_date?: string
           hearts?: number
           hearts_updated_at?: string
           id: string
@@ -298,12 +381,15 @@ export type Database = {
           migrated?: boolean
           role?: string
           streak?: number
+          tier_expires_at?: string | null
           updated_at?: string
           xp?: number
         }
         Update: {
           active_tier?: string
           created_at?: string
+          daily_quests_played?: number
+          daily_reset_date?: string
           hearts?: number
           hearts_updated_at?: string
           id?: string
@@ -311,6 +397,7 @@ export type Database = {
           migrated?: boolean
           role?: string
           streak?: number
+          tier_expires_at?: string | null
           updated_at?: string
           xp?: number
         }
@@ -367,10 +454,12 @@ export type Database = {
         Args: { _client_key: string; _feature: string; _limit: number }
         Returns: boolean
       }
+      expire_demo_passes: { Args: never; Returns: number }
       is_league_member: {
         Args: { _league_id: string; _user_id: string }
         Returns: boolean
       }
+      reset_daily_counters: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
