@@ -197,7 +197,7 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
               ) : (
                 <div className="w-full py-3 rounded-xl font-bold text-cyan-400 bg-cyan-400/20 border border-cyan-400 text-center">⏳ Special Pass Active!</div>
               )}
-              <button className="w-full py-4 rounded-xl font-black text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-transform">
+              <button onClick={() => void handleUpgrade('special')} disabled={busy} className="w-full py-4 rounded-xl font-black text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-[1.02] shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-transform disabled:opacity-60">
                 Upgrade to SPECIAL
               </button>
             </div>
@@ -206,9 +206,13 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
 
         {/* Custom Footer */}
         <div className="text-center p-4 bg-gray-900 rounded-b-3xl border-t border-gray-800">
+          {notice && (
+            <p className="text-sm font-semibold text-cyan-300 mb-2">{notice}</p>
+          )}
           <p className="text-gray-400 text-sm font-medium">
             "You'll never regret any of these.. even free tier...😉"
           </p>
+
         </div>
 
       </div>
