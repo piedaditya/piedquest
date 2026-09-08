@@ -153,7 +153,7 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
               ) : (
                 <div className="w-full py-3 rounded-xl font-bold text-yellow-400 bg-yellow-400/20 border border-yellow-400 text-center">⏳ Pro Pass Active!</div>
               )}
-              <button className="w-full py-4 rounded-xl font-black text-indigo-950 bg-gradient-to-r from-yellow-400 to-amber-500 hover:scale-[1.02] transition-transform">
+              <button onClick={() => void handleUpgrade('gold')} disabled={busy} className="w-full py-4 rounded-xl font-black text-indigo-950 bg-gradient-to-r from-yellow-400 to-amber-500 hover:scale-[1.02] transition-transform disabled:opacity-60">
                 Upgrade to PRO
               </button>
             </div>
