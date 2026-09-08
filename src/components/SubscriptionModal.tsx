@@ -129,11 +129,12 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
             
             <div className="mb-8">
               <div className="flex items-end gap-2 mb-1">
-                <span className="text-4xl font-black text-white">₹{currentGold.price}</span>
-                <span className="text-lg text-gray-500 line-through mb-1">₹{currentGold.original}</span>
+                <span className="text-4xl font-black text-white">{currentGold.display}</span>
+                <span className="text-lg text-gray-500 line-through mb-1">{currentGold.originalDisplay}</span>
               </div>
               <div className="inline-block bg-yellow-400/20 border border-yellow-400/50 text-yellow-400 text-xs font-bold px-2 py-1 rounded">
-                SAVE ₹{currentGold.original - currentGold.price} ({getDiscount(currentGold.price, currentGold.original)}% OFF)
+                SAVE {getDiscount(currentGold)}% OFF
+
               </div>
             </div>
             
