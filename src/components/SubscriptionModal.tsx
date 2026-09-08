@@ -173,11 +173,12 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
             
             <div className="mb-8">
               <div className="flex items-end gap-2 mb-1">
-                <span className="text-4xl font-black text-white">₹{currentSpecial.price}</span>
-                <span className="text-lg text-gray-500 line-through mb-1">₹{currentSpecial.original}</span>
+                <span className="text-4xl font-black text-white">{currentSpecial.display}</span>
+                <span className="text-lg text-gray-500 line-through mb-1">{currentSpecial.originalDisplay}</span>
               </div>
               <div className="inline-block bg-cyan-400/20 border border-cyan-400/50 text-cyan-400 text-xs font-bold px-2 py-1 rounded">
-                SAVE ₹{currentSpecial.original - currentSpecial.price} ({getDiscount(currentSpecial.price, currentSpecial.original)}% OFF)
+                SAVE {getDiscount(currentSpecial)}% OFF
+
               </div>
             </div>
             
