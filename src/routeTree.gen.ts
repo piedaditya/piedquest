@@ -20,6 +20,7 @@ import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiQuestStreamRouteImport } from './routes/api/quest-stream'
+import { Route as ApiPublicCronMidnightRouteImport } from './routes/api/public/cron/midnight'
 
 const VaultRoute = VaultRouteImport.update({
   id: '/vault',
@@ -76,6 +77,11 @@ const ApiQuestStreamRoute = ApiQuestStreamRouteImport.update({
   path: '/api/quest-stream',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronMidnightRoute = ApiPublicCronMidnightRouteImport.update({
+  id: '/api/public/cron/midnight',
+  path: '/api/public/cron/midnight',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/results': typeof ResultsRoute
   '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
+  '/api/public/cron/midnight': typeof ApiPublicCronMidnightRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/results': typeof ResultsRoute
   '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
+  '/api/public/cron/midnight': typeof ApiPublicCronMidnightRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/results': typeof ResultsRoute
   '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
+  '/api/public/cron/midnight': typeof ApiPublicCronMidnightRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/vault'
     | '/api/quest-stream'
+    | '/api/public/cron/midnight'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/vault'
     | '/api/quest-stream'
+    | '/api/public/cron/midnight'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/vault'
     | '/api/quest-stream'
+    | '/api/public/cron/midnight'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   ResultsRoute: typeof ResultsRoute
   VaultRoute: typeof VaultRoute
   ApiQuestStreamRoute: typeof ApiQuestStreamRoute
+  ApiPublicCronMidnightRoute: typeof ApiPublicCronMidnightRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuestStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/midnight': {
+      id: '/api/public/cron/midnight'
+      path: '/api/public/cron/midnight'
+      fullPath: '/api/public/cron/midnight'
+      preLoaderRoute: typeof ApiPublicCronMidnightRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResultsRoute: ResultsRoute,
   VaultRoute: VaultRoute,
   ApiQuestStreamRoute: ApiQuestStreamRoute,
+  ApiPublicCronMidnightRoute: ApiPublicCronMidnightRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
