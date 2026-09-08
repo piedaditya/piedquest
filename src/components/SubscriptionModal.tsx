@@ -1,37 +1,74 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, CheckCircle2, X, Ticket, Crown } from "lucide-react";
 
+import { activateDemoPass, createCheckout, getBillingState, getRegionalPricing } from "@/lib/billing.functions";
+import { buildPricing, type BillingCycle, type PaidTier, type RegionalPricing } from "@/lib/pricing";
+
 export default function SubscriptionModal({ onClose }: { onClose: () => void }) {
-  const [billingCycle, setBillingCycle] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [activePass, setActivePass] = useState<string | null>(null);
-  
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  // Prices are always computed server-side (geo + PPP); this is only a
+  // placeholder until the authoritative sheet arrives.
+  const [pricing, setPricing] = useState<RegionalPricing>(() => buildPricing("IN"));
+
   // This state controls the mobile tab switcher! Default is Gold.
   const [activeTab, setActiveTab] = useState<'free' | 'gold' | 'special'>('gold');
 
-  const handleClaimPass = (tier: string) => {
-    setActivePass(tier);
-    alert(`🎉 24-Hour ${tier} Pass Activated! Enjoy the ultimate experience.`);
-  };
+  useEffect(() => {
+    let alive = true;
+    void getRegionalPricing()
+      .then((sheet) => { if (alive) setPricing(sheet); })
+      .catch(() => null);
+    void getBillingState()
+      .then((state) => { if (alive && state.demo.active) setActivePass('SPECIAL'); })
+      .catch(() => null);
+    return () => { alive = false; };
+  }, []);
 
-  // Pricing Dictionary (INR Base - will convert via PPP later)
-  const pricing = {
-    daily: {
-      gold: { price: 9, original: 10 },
-      special: { price: 13, original: 20 }
-    },
-    monthly: {
-      gold: { price: 99, original: 300 },
-      special: { price: 143, original: 600 }
-    },
-    yearly: {
-      gold: { price: 999, original: 3600 },
-      special: { price: 1436, original: 7200 }
+  const handleClaimPass = async (tier: string) => {
+    if (busy) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const res = await activateDemoPass();
+      if (res.ok) {
+        setActivePass(tier);
+        setNotice("🎉 24-Hour pass activated! Special perks are live for the next 24 hours.");
+      } else if (res.reason === "already_used") {
+        setNotice("You've already claimed your free pass — one per player.");
+      } else if (res.reason === "already_special") {
+        setNotice("You're already on Special. Enjoy!");
+      } else {
+        setNotice("Sign in first to claim your free pass.");
+      }
+    } catch {
+      setNotice("Sign in first to claim your free pass.");
+    } finally {
+      setBusy(false);
     }
   };
 
-  const getDiscount = (price: number, original: number) => Math.round(((original - price) / original) * 100);
-  const currentGold = pricing[billingCycle].gold;
-  const currentSpecial = pricing[billingCycle].special;
+  const handleUpgrade = async (tier: PaidTier) => {
+    if (busy) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const res = await createCheckout({ data: { tier, cycle: billingCycle } });
+      if (res.ok && res.url) window.location.href = res.url;
+      else setNotice(res.message ?? "Sign in to upgrade.");
+    } catch {
+      setNotice("Sign in to upgrade.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const getDiscount = (row: { savePercent: number }) => row.savePercent;
+  const currentGold = pricing.cycles[billingCycle].gold;
+  const currentSpecial = pricing.cycles[billingCycle].special;
+
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 lg:p-8 animate-in fade-in duration-300 overflow-y-auto">
