@@ -107,7 +107,7 @@ export default function SubscriptionModal({ onClose }: { onClose: () => void }) 
           <div className={`p-8 lg:p-10 flex-col hover:bg-gray-900/30 transition-colors ${activeTab === 'free' ? 'flex' : 'hidden'} lg:flex`}>
             <h3 className="text-2xl font-bold text-gray-200 mb-2">Free Explorer</h3>
             <p className="text-gray-500 text-sm mb-6">The core game, crafted with love.</p>
-            <div className="text-4xl font-black text-white mb-8">₹0<span className="text-lg text-gray-500 font-normal">/forever</span></div>
+            <div className="text-4xl font-black text-white mb-8">{pricing.symbol}0<span className="text-lg text-gray-500 font-normal">/forever</span></div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex gap-3 text-gray-300"><CheckCircle2 className="w-5 h-5 text-gray-600 shrink-0" /> Daily Global Quests</li>
               <li className="flex gap-3 text-gray-300"><CheckCircle2 className="w-5 h-5 text-gray-600 shrink-0" /> Infinite Ad-Supported Play</li>
