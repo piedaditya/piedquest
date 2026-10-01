@@ -25,7 +25,7 @@ export const Route = createFileRoute("/quiz")({
     <FullBleed>
       <div className="max-w-md text-center">
         <h2 className="font-display text-3xl">Today's challenge didn't load</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{(error as Error).message}</p>
       </div>
     </FullBleed>
   ),
