@@ -21,6 +21,7 @@ import { Route as ResultsRouteImport } from './routes/results'
 import { Route as VaultRouteImport } from './routes/vault'
 import { Route as ApiQuestStreamRouteImport } from './routes/api/quest-stream'
 import { Route as ApiPublicCronMidnightRouteImport } from './routes/api/public/cron/midnight'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const ApiPublicCronMidnightRoute = ApiPublicCronMidnightRouteImport.update({
   path: '/api/public/cron/midnight',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe/webhook',
+  path: '/api/public/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
   '/api/public/cron/midnight': typeof ApiPublicCronMidnightRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
   '/api/public/cron/midnight': typeof ApiPublicCronMidnightRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/vault': typeof VaultRoute
   '/api/quest-stream': typeof ApiQuestStreamRoute
   '/api/public/cron/midnight': typeof ApiPublicCronMidnightRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/vault'
     | '/api/quest-stream'
     | '/api/public/cron/midnight'
+    | '/api/public/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/vault'
     | '/api/quest-stream'
     | '/api/public/cron/midnight'
+    | '/api/public/stripe/webhook'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/vault'
     | '/api/quest-stream'
     | '/api/public/cron/midnight'
+    | '/api/public/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   VaultRoute: typeof VaultRoute
   ApiQuestStreamRoute: typeof ApiQuestStreamRoute
   ApiPublicCronMidnightRoute: typeof ApiPublicCronMidnightRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronMidnightRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe/webhook': {
+      id: '/api/public/stripe/webhook'
+      path: '/api/public/stripe/webhook'
+      fullPath: '/api/public/stripe/webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   VaultRoute: VaultRoute,
   ApiQuestStreamRoute: ApiQuestStreamRoute,
   ApiPublicCronMidnightRoute: ApiPublicCronMidnightRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

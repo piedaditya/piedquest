@@ -352,6 +352,24 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          id: string
+          processed_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          processed_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           active_tier: string
@@ -365,6 +383,8 @@ export type Database = {
           migrated: boolean
           role: string
           streak: number
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           tier_expires_at: string | null
           updated_at: string
           xp: number
@@ -381,6 +401,8 @@ export type Database = {
           migrated?: boolean
           role?: string
           streak?: number
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tier_expires_at?: string | null
           updated_at?: string
           xp?: number
@@ -397,6 +419,8 @@ export type Database = {
           migrated?: boolean
           role?: string
           streak?: number
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tier_expires_at?: string | null
           updated_at?: string
           xp?: number

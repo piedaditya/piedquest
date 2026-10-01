@@ -17,6 +17,7 @@ import { getClientId, getUsername } from "@/lib/leaderboard";
 import { formatMs } from "@/lib/daily-leaderboard";
 import { submitDailyResult } from "@/lib/leaderboard.functions";
 import { recordRoundResult } from "@/lib/social.functions";
+import { getDailyPlays, registerDailyPlay } from "@/lib/billing.functions";
 import {
   BgGlow,
   FullBleed,
@@ -56,6 +57,7 @@ function ResultsRoute() {
 function ResultsContainer() {
   const { data } = useSuspenseQuery(dailyQuizQueryOptions);
   const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
+  const [played, setPlayed] = useState<number | null>(null);
 
   useEffect(() => {
     setStorage(readStorage());
@@ -87,6 +89,13 @@ function ResultsContainer() {
       void recordRoundResult({
         data: { won: !s.lastDisqualified && (s.lastScore ?? 0) >= 8 },
       }).catch(() => undefined);
+      void registerDailyPlay()
+        .then((r) => setPlayed(r.played))
+        .catch(() => undefined);
+    } else {
+      void getDailyPlays()
+        .then((r) => setPlayed(r.played))
+        .catch(() => undefined);
     }
   }, []);
 
@@ -106,6 +115,7 @@ function ResultsContainer() {
       quiz={data}
       storage={storage}
       pattern={storage.lastPattern ?? []}
+      played={played}
     />
   );
 }
@@ -114,10 +124,12 @@ function Results({
   quiz,
   storage,
   pattern,
+  played,
 }: {
   quiz: DailyQuiz;
   storage: QuizStorage;
   pattern: boolean[];
+  played: number | null;
 }) {
   const score = storage.lastScore ?? pattern.filter(Boolean).length;
   const streak = getCurrentStreak(storage);
@@ -255,6 +267,15 @@ function Results({
               : "Copies an emoji grid. No spoilers."}
           </p>
         </div>
+
+        {played !== null && (
+          <div className="mt-6 flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-5 py-4">
+            <span className="font-display text-xs uppercase tracking-[0.25em] text-accent">
+              Runs completed today
+            </span>
+            <span className="font-display text-2xl tabular-nums text-primary">{played}</span>
+          </div>
+        )}
 
         <NextQuestCountdown />
 

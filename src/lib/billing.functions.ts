@@ -178,6 +178,10 @@ export const createCheckout = createServerFn({ method: "POST" })
         "line_items[0][price_data][recurring][interval]",
         data.cycle === "yearly" ? "year" : "month",
       );
+      // Lets renewal/cancel webhooks map back to the player.
+      body.set("subscription_data[metadata][user_id]", context.userId);
+      body.set("subscription_data[metadata][tier]", data.tier);
+      body.set("subscription_data[metadata][cycle]", data.cycle);
     }
 
     try {
@@ -207,12 +211,13 @@ export const createCheckout = createServerFn({ method: "POST" })
     }
   });
 
-/** Counts a completed daily quest, server-side. */
+/** Counts a completed daily quest, server-side. Day boundary = IST midnight. */
 export const registerDailyPlay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const today = new Date().toISOString().slice(0, 10);
+    const { istDate } = await import("@/lib/ist-date");
+    const today = istDate();
     const { data: row } = await supabaseAdmin
       .from("users")
       .select("daily_quests_played, daily_reset_date")
@@ -224,4 +229,17 @@ export const registerDailyPlay = createServerFn({ method: "POST" })
       .update({ daily_quests_played: played, daily_reset_date: today })
       .eq("id", context.userId);
     return { played };
+  });
+
+/** Reads today's (IST) completed-runs counter. */
+export const getDailyPlays = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { istDate } = await import("@/lib/ist-date");
+    const { data: row } = await context.supabase
+      .from("users")
+      .select("daily_quests_played, daily_reset_date")
+      .eq("id", context.userId)
+      .maybeSingle();
+    return { played: row?.daily_reset_date === istDate() ? (row?.daily_quests_played ?? 0) : 0 };
   });

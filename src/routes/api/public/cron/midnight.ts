@@ -23,13 +23,11 @@ async function run(request: Request): Promise<Response> {
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const date = new Date().toISOString().slice(0, 10);
+  const { istDate } = await import("@/lib/ist-date");
+  const date = istDate();
 
   const [resetRes, expireRes] = await Promise.all([
-    supabaseAdmin
-      .from("users")
-      .update({ daily_quests_played: 0, daily_reset_date: date })
-      .neq("daily_reset_date", date),
+    supabaseAdmin.rpc("reset_daily_counters" as never),
     supabaseAdmin.rpc("expire_demo_passes" as never),
   ]);
 
