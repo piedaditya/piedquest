@@ -69,7 +69,7 @@ export const Route = createFileRoute("/my-quests")({
     <FullBleed>
       <div className="max-w-md text-center">
         <h2 className="font-display text-3xl">My Own Quests didn't load</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{(error as Error).message}</p>
       </div>
     </FullBleed>
   ),
