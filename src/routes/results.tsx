@@ -115,6 +115,7 @@ function ResultsContainer() {
       quiz={data}
       storage={storage}
       pattern={storage.lastPattern ?? []}
+      played={played}
     />
   );
 }
@@ -123,10 +124,12 @@ function Results({
   quiz,
   storage,
   pattern,
+  played,
 }: {
   quiz: DailyQuiz;
   storage: QuizStorage;
   pattern: boolean[];
+  played: number | null;
 }) {
   const score = storage.lastScore ?? pattern.filter(Boolean).length;
   const streak = getCurrentStreak(storage);
@@ -264,6 +267,15 @@ function Results({
               : "Copies an emoji grid. No spoilers."}
           </p>
         </div>
+
+        {played !== null && (
+          <div className="mt-6 flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-5 py-4">
+            <span className="font-display text-xs uppercase tracking-[0.25em] text-accent">
+              Runs completed today
+            </span>
+            <span className="font-display text-2xl tabular-nums text-primary">{played}</span>
+          </div>
+        )}
 
         <NextQuestCountdown />
 
