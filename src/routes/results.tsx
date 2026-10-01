@@ -17,6 +17,7 @@ import { getClientId, getUsername } from "@/lib/leaderboard";
 import { formatMs } from "@/lib/daily-leaderboard";
 import { submitDailyResult } from "@/lib/leaderboard.functions";
 import { recordRoundResult } from "@/lib/social.functions";
+import { getDailyPlays, registerDailyPlay } from "@/lib/billing.functions";
 import {
   BgGlow,
   FullBleed,
@@ -56,6 +57,7 @@ function ResultsRoute() {
 function ResultsContainer() {
   const { data } = useSuspenseQuery(dailyQuizQueryOptions);
   const [storage, setStorage] = useState<QuizStorage>(() => readStorage());
+  const [played, setPlayed] = useState<number | null>(null);
 
   useEffect(() => {
     setStorage(readStorage());
@@ -87,6 +89,13 @@ function ResultsContainer() {
       void recordRoundResult({
         data: { won: !s.lastDisqualified && (s.lastScore ?? 0) >= 8 },
       }).catch(() => undefined);
+      void registerDailyPlay()
+        .then((r) => setPlayed(r.played))
+        .catch(() => undefined);
+    } else {
+      void getDailyPlays()
+        .then((r) => setPlayed(r.played))
+        .catch(() => undefined);
     }
   }, []);
 
