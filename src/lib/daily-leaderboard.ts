@@ -1,37 +1,20 @@
-import { supabase } from "@/integrations/supabase/client";
-import { getClientId, getUsername } from "./leaderboard";
+import { getClientId } from "./leaderboard";
 import { getLocalDateString } from "./quiz-storage";
+import {
+  getDailyLeaderboardTop,
+  getMyDailyRun,
+  type DailyLeaderboardRow,
+} from "./leaderboard.functions";
 
-export interface DailyRunRow {
-  id: string;
-  user_id: string;
-  username: string;
-  quiz_date: string;
-  score: number;
-  time_ms: number;
-  tab_switches: number;
-  disqualified: boolean;
-  created_at: string;
-}
-
-const COLS =
-  "id, user_id, username, quiz_date, score, time_ms, tab_switches, disqualified, created_at";
+export type DailyRunRow = DailyLeaderboardRow;
 
 /** Top 100 players for a given day: score DESC, then fastest time. */
 export async function fetchDailyTop(
   quizDate: string = getLocalDateString(),
   limit = 100,
 ): Promise<DailyRunRow[]> {
-  const { data, error } = await supabase
-    .from("daily_leaderboard")
-    .select(COLS)
-    .eq("quiz_date", quizDate)
-    .order("disqualified", { ascending: true })
-    .order("score", { ascending: false })
-    .order("time_ms", { ascending: true })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as DailyRunRow[];
+  const rows = await getDailyLeaderboardTop({ data: { quizDate } });
+  return rows.slice(0, Math.max(1, limit));
 }
 
 export async function fetchMyDailyRun(
@@ -39,14 +22,7 @@ export async function fetchMyDailyRun(
 ): Promise<DailyRunRow | null> {
   const user_id = getClientId();
   if (!user_id) return null;
-  const { data, error } = await supabase
-    .from("daily_leaderboard")
-    .select(COLS)
-    .eq("quiz_date", quizDate)
-    .eq("user_id", user_id)
-    .maybeSingle();
-  if (error) return null;
-  return (data as DailyRunRow | null) ?? null;
+  return getMyDailyRun({ data: { clientId: user_id, quizDate } });
 }
 
 // Daily runs are written server-side after answer verification

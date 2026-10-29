@@ -8,6 +8,20 @@
       "when": 1790871360259,
       "tag": "0000_ist_midnight_and_stripe_fulfillment",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793258285028,
+      "tag": "0001_leaderboard_reads_server_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793258335565,
+      "tag": "0002_leaderboard_revoke_residual",
+      "breakpoints": true
     }
   ]
 }
