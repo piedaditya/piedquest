@@ -13,7 +13,7 @@ export async function fetchDailyTop(
   quizDate: string = getLocalDateString(),
   limit = 100,
 ): Promise<DailyRunRow[]> {
-  const rows = await getDailyLeaderboardTop({ quizDate });
+  const rows = await getDailyLeaderboardTop({ data: { quizDate } });
   return rows.slice(0, Math.max(1, limit));
 }
 
@@ -22,7 +22,7 @@ export async function fetchMyDailyRun(
 ): Promise<DailyRunRow | null> {
   const user_id = getClientId();
   if (!user_id) return null;
-  return getMyDailyRun({ clientId: user_id, quizDate });
+  return getMyDailyRun({ data: { clientId: user_id, quizDate } });
 }
 
 // Daily runs are written server-side after answer verification
