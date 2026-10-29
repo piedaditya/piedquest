@@ -15,6 +15,13 @@
       "when": 1793258285028,
       "tag": "0001_leaderboard_reads_server_only",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793258335565,
+      "tag": "0002_leaderboard_revoke_residual",
+      "breakpoints": true
     }
   ]
 }
