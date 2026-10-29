@@ -1,4 +1,8 @@
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getLeaderboardByStreak,
+  getLeaderboardByXp,
+  type GlobalLeaderboardRow,
+} from "./leaderboard.functions";
 
 const CLIENT_ID_KEY = "dailyquest_client_id_v1";
 const USERNAME_KEY = "dailyquest_username_v1";
@@ -51,37 +55,17 @@ export function setUsername(name: string): string {
   return trimmed;
 }
 
-export interface LeaderboardRow {
-  id: string;
-  client_id: string;
-  username: string;
-  streak: number;
-  xp: number;
-  score: number;
-  updated_at: string;
-}
+export type LeaderboardRow = GlobalLeaderboardRow;
 
 export async function fetchTopLeaderboard(limit = 10): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase
-    .from("leaderboard")
-    .select("id, client_id, username, streak, xp, score, updated_at")
-    .order("xp", { ascending: false })
-    .order("streak", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as LeaderboardRow[];
+  const rows = await getLeaderboardByXp();
+  return rows.slice(0, Math.max(1, limit));
 }
 
 export async function fetchTopByStreak(limit = 10): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase
-    .from("leaderboard")
-    .select("id, client_id, username, streak, xp, score, updated_at")
-    .order("streak", { ascending: false })
-    .order("xp", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as LeaderboardRow[];
+  const rows = await getLeaderboardByStreak();
+  return rows.slice(0, Math.max(1, limit));
 }
 
-// Leaderboard writes are server-only (see leaderboard.functions.ts): the
-// client cannot write scores, streaks or XP directly.
+// Leaderboard reads and writes are both server-side: the client cannot
+// query or write the leaderboard tables directly.
